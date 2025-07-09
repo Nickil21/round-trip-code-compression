@@ -30,26 +30,9 @@ def check_io_pred_acc(item, algo):
             "predicted": json.dumps(predicted) if predicted is not None else None,
         }
 
-    # validate algorithm
-    if algo not in ("lzw", "ae", "rle"):
-        return _make_response(
-            "no answer",
-            f"Unknown algorithm '{algo}'",
-        )
-
     # extract last JSON blob
     output_str = item["output"]
-    last_json = extract_last_complete_json(output_str)
-    if last_json is None:
-        return _make_response(
-            "no answer",
-            "Fail to extract a complete and valid JSON from the output!",
-        )
-    if not isinstance(last_json, dict):
-        return _make_response(
-            "no answer",
-            "The last JSON is not a dict!",
-        )
+    last_json = extract_last_complete_json(output_str) 
 
     # lookup ground truth
     ori_item = parsed_ios[item["itemid"]]
@@ -64,16 +47,46 @@ def check_io_pred_acc(item, algo):
 
     # decide primary side and expected type/value
     if io_pred.startswith("output"):
-        primary       = "output"
-        expected      = ori_io["output"]
-        expected_type = list if algo == "lzw" else float
+        primary  = "output"
+        expected = ori_io["output"]
+        # pick the right expected type per algorithm
+        if algo == "lzw":
+            # LZW outputs a list of ints
+            expected_type      = list
+            expected_item_type = int
+        elif algo == "ae":
+            # Arithmetic encoding outputs a single float
+            expected_type      = float
+            expected_item_type = None
+        elif algo == "rle":
+            # RLE outputs a list of (char, count) tuples
+            expected_type      = list
+            expected_item_type = tuple
+
     elif io_pred.startswith("input"):
         primary       = "input"
         # assume only one entry in ori_io["input"]
-        expected      = next(iter(ori_io["input"].values()))
+        expected      = ori_io["input"]
         expected_type = str
-    else:
-        return _error(f"Unknown io_pred '{io_pred}'")
+
+    if last_json is None:
+        return _make_response(
+            "no answer",
+            "Fail to extract a complete and valid JSON from the output!",
+            actual=expected,
+            predicted="no answer"
+        )
+
+    if not isinstance(last_json, dict):
+        return _make_response(
+            "no answer",
+            "The last JSON is not a dict!",
+            actual=expected,
+            predicted="no answer"
+        )
+
+    if expected_item_type and not all(isinstance(x, expected_item_type) for x in expected):
+        raise TypeError(f"Expected list of {expected_item_type.__name__} for {algo} output")
 
     # find a top‐level key the student used
     found_key = None
@@ -83,7 +96,10 @@ def check_io_pred_acc(item, algo):
             break
     if found_key is None:
         a, b = synonyms[primary]
-        return _error(f"No field '{a}' or '{b}' in the last JSON!")
+        return _make_response("no answer",
+                              f"No field '{a}' or '{b}' in the last JSON!",
+                              actual=expected,
+                              predicted="no answer")
 
     # extract the actual predicted value, handling nested dicts
     raw_value = last_json[found_key]
@@ -99,16 +115,38 @@ def check_io_pred_acc(item, algo):
                 break
         if pred is None:
             a, b = synonyms[primary]
-            return _error(f"No nested field '{a}' or '{b}' inside '{found_key}'!")
+            return _make_response("no answer",
+                          f"No nested field '{a}' or '{b}' inside '{found_key}'!",
+                          actual=expected,
+                          predicted="no answer")
     else:
         # they did {"input": "..."} or {"output": [...]}
         if isinstance(raw_value, expected_type):
             pred     = raw_value
             used_key = found_key
         else:
-            return _error(f"Field '{found_key}' is not of type {expected_type.__name__}!")
+            return _make_response("no answer",
+                                 f"Field '{found_key}' is not of type {expected_type.__name__}!",
+                                 actual=expected,
+                                 predicted="no answer")
 
     # correctness check
+    if primary == "input":
+        correct = (pred == expected)
+    else:
+        if algo in ("lzw", "rle"):
+            correct = (pred == expected)
+        else:  # ae
+            correct = math.isclose(pred, expected, rel_tol=tol, abs_tol=tol)
+
+
+    # validate algorithm
+    if algo not in ("lzw", "ae", "rle"):
+        return _make_response(
+            "no answer",
+            f"Unknown algorithm '{algo}'",
+        )
+
     if correct:
         return _make_response(
             "correct",
@@ -118,6 +156,7 @@ def check_io_pred_acc(item, algo):
         )
 
     # mismatch
+    given_side = "input" if primary == "output" else "output"
     msg = (
         "[Mismatch] Your "
         f"{primary} is not correct!\n"
@@ -314,10 +353,12 @@ def main():
             res = check_io_pred_acc(item, algo=args.algo)
             item['res'] = res
             batchstat[res['status']] += 1
+            print(csv_rows)
             # collect for CSV
             csv_rows.append({
                 "model": item.get("model"),
                 "temperature": item.get("temperature"),
+                "io_pred": item.get("io_pred"),
                 "actual": json.loads(res.get("actual", "null")),
                 "predicted": json.loads(res.get("predicted", "null"))
             })
@@ -330,6 +371,7 @@ def main():
             csv_rows.append({
                 "model": item.get("model"),
                 "temperature": item.get("temperature"),
+                "io_pred": item.get("io_pred"),
                 "actual": json.loads(res.get("actual", "null")),
                 "predicted": json.loads(res.get("predicted", "null"))
             })

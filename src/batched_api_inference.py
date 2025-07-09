@@ -1,10 +1,19 @@
+import os
+os.environ.pop("SSL_CERT_FILE", None)
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
 
+import openai
+from openai import OpenAI
 import datetime
 import json
 from argparse import ArgumentParser
-import os
+
 import torch
 import time
 from tqdm import tqdm
@@ -15,6 +24,7 @@ from helper import model_sizes, model_categories
 max_try_one_call = 2
 llm = None
 sampling_params = None
+use_openai = False
 ###############################################
 
 
@@ -67,17 +77,30 @@ def process_line(js, output_path):
 
     for i in range(max_try_one_call):
         try:
-            prompt = format_messages(messages)
-            text = tokenizer.apply_chat_template(
-                                                messages,
-                                                tokenize=False,
-                                                add_generation_prompt=True,
-                                                enable_thinking=False,  # Set to False to strictly disable thinking
-                                            )
-            outputs = llm.generate([text], sampling_params)
-            # print(outputs)
-            response = outputs[0].outputs[0].text.strip()
+            if use_openai:
+                # OPENAI BRANCH
+                resp = client.chat.completions.create(
+                    model=js.get('model', model),
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                response = resp.choices[0].message.content.strip()
+
+            else:
+                # VLLM BRANCH
+                prompt = format_messages(messages)
+                text = tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True,
+                    enable_thinking=False,
+                )
+                outputs = llm.generate([text], sampling_params)
+                response = outputs[0].outputs[0].text.strip()
+
             break
+
         except Exception as e:
             print(f"Error: {e}")
             if i < max_try_one_call - 1:
@@ -97,7 +120,7 @@ def process_line(js, output_path):
 
 @timer
 def process_file(input_file_path, output_file_path):
-    print(f"Calling vLLM model: {model}")
+    print(f"Using {'OpenAI' if use_openai else 'vLLM'} model: {model}")
     inlines = load_jsonl_yield(input_file_path)
 
     exist = set()
@@ -139,18 +162,31 @@ if __name__ == "__main__":
     parser.add_argument("--temperature", default=0.2, type=float)
     parser.add_argument("--max_tokens", default=16384, type=int)
     parser.add_argument("--tp_size", default=4, type=int)
+    parser.add_argument("--use_openai", action="store_true", help="If set, use OpenAI API instead of vLLM")
 
     args = parser.parse_args()
+    use_openai = args.use_openai
+
     args.output = args.output.format(args.model)
 
     model = args.model
     model_size = model_sizes[args.model]
     model_category = model_categories[args.model]
-    tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
     temperature = args.temperature
     max_tokens = args.max_tokens
     tp_size = args.tp_size
 
+    # if using OpenAI, configure the key
+    if use_openai:
+        key = os.getenv("OPENAI_API_KEY")
+        print("Using OpenAI API key:", key)
+        if not key:
+            raise RuntimeError("OpenAI API key required for --use_openai")
+        openai.api_key = key
+        client = OpenAI(api_key=key)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
+        init_llm(model, temperature, max_tokens, tp_size)
+    
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
-    init_llm(model, temperature, max_tokens, tp_size)
     process_file(args.input, args.output)

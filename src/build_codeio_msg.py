@@ -100,6 +100,12 @@ if __name__=="__main__":
                     "Output:\n  `return` (str): The original input string before compression."
                 )
 
+                io_req_decoding_inversion = (
+                    "Input:\n  `uncompressed` (str): The original input string before compression.\n\n"
+                    "Output:\n  `return` (list of int): A list of integers representing "
+                    "the compressed form of the input string using LZW encoding."
+                )
+
             elif args.algorithm == "ae":
                 freq = get_freq_dict(ioid=ioid, algo="ae")  # you must provide ioid externally
                 encoding_fn = (
@@ -160,6 +166,12 @@ if __name__=="__main__":
                     "Output:\n  `return` (str): The original input string before compression."
                 )
 
+                io_req_decoding_inversion = (
+                    "Input:\n  `uncompressed` (str): The original input string before compression.\n\n"
+                    "Output:\n  `return` (float): A probability value representing the "
+                    "compressed form of the input string using Arithmetic Encoding."
+                )
+
             elif args.algorithm == "rle":
                 encoding_fn = (
                     "def main_solution(uncompressed):\n"
@@ -197,10 +209,15 @@ if __name__=="__main__":
                     "Input:\n  `compressed` (list of tuple): A list of (char, count) tuples from the RLE compression.\n\n"
                     "Output:\n  `return` (str): The original uncompressed string."
                 )
+
+                io_req_decoding_inversion = (
+                    "Input:\n  `uncompressed` (str): The original uncompressed string.\n\n"
+                    "Output:\n  `return` (list of tuple): A list of (char, count) tuples from the RLE compression."
+                )
             
-            for task in ["output_execution_prediction", "input_execution_prediction", 
+            for n_task, task in enumerate(["output_execution_prediction", "input_execution_prediction", 
                         #  "output_reconstruction_prediction", "input_reconstruction_prediction", 
-                         "output_execution_prediction_with_inversion", "input_execution_prediction_with_inversion"]:
+                         "output_execution_prediction_with_inversion", "input_execution_prediction_with_inversion"]):
 
                 # Select correct function and IO description based on the task
                 if task in ["output_execution_prediction", "input_execution_prediction", "input_execution_prediction_with_inversion"]:
@@ -208,7 +225,7 @@ if __name__=="__main__":
                     io_req = io_req_encoding
                 elif task in ["output_execution_prediction_with_inversion"]:
                     refcode = decoding_fn
-                    io_req = io_req_decoding
+                    io_req = io_req_decoding_inversion
                 else:
                     raise ValueError(f"Unknown task type: {args.task}")
             
@@ -217,12 +234,18 @@ if __name__=="__main__":
 
                 # Build sample dictionary
                 sample = {
+                    "problem_description": problem_description,
+                    "io_requirements": io_req,
                     "messages": msg,
                     "itemid": iid,
                     "ioid": ioid,
                     "io_pred": task,
                     "category": category,
-                    "algorithm": algorithm
+                    "algorithm": algorithm,
+                    "refcode": refcode,
+                    "input": input_xx,
+                    "output": output_xx,
+                    "id": f"{iid}_{ioid}_{n_task}"
                 }
 
                 adt.append(sample)
