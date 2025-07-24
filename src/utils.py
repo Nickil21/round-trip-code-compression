@@ -15,11 +15,11 @@ def get_freq_dict(ioid: int, algo: str, base_path="datasets") -> dict:
     """
     Loads frequency dictionary from a .json file.
     """
-    import glob
-    import os
-
     prefix = f"{ioid:03d}_"
-    search_path = os.path.join(base_path, algo, "output", f"{prefix}*_freq.json")
+    if algo == "ae":
+        search_path = os.path.join(base_path, algo, "output", f"{prefix}*_freq.json")
+    elif algo == "huffman":
+        search_path = os.path.join(base_path, algo, "output", f"{prefix}*_codebook.json")
     matches = glob.glob(search_path)
     if not matches:
         print(f"[WARN] No freq file found for ID {ioid} in {algo}")

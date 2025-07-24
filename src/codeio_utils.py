@@ -15,13 +15,16 @@ import signal
 
 
 refcode_template = """Tip: Here is a reference code snippet for this question. You can refer to this code to guide your reasoning but not copy spans of code directly.
-
-<<<<refcode>>>>"""
+```python
+<<<<refcode>>>>
+```"""
 
 
 refcode_template_inversion = """Tip: Here is a reference code snippet for this question. You can refer to this code to guide your reasoning but not copy spans of code directly.
 
+```python
 <<<<refcode>>>>
+```
 
 (Important: The code performs compression or decompression depending on the task. You must use the inverse logic of this code to infer your answer, not run or duplicate it directly.)
 """
@@ -38,7 +41,8 @@ Given the following input:
 
 <<<<input>>>>
 
-Can you predict the output without writing any code? Please reason and put your final answer in the following json format: {"output": <your output>}, where <your output> should strictly match the the output requirement as specified."""
+Can you predict the output without writing any code? Do not include any explanations, reasoning, or extra text. Put your final answer in the following json format: {"output": <your output>}, where <your output> should strictly match the the output requirement as specified.
+<<<END_JSON>>>"""
 
 
 input_exec_pred_template = """You are given a question that requires some input and output variables as follows:
@@ -53,9 +57,53 @@ Given the following output:
 
 <<<<output>>>>
 
-Can you predict a feasible input without writing any code? Please reason and put your final answer in the following json format: {"input": <your input>}, where <your input> should be a dictionary, even if the there is only one input variable, with keys strictly match the input variables' names as specified."""
+Can you predict a feasible input without writing any code? Do not include any explanations, reasoning, or extra text. Put your final answer in the following json format: {"input": <your input>}, where <your input> should be a dictionary, even if the there is only one input variable, with keys strictly match the input variables' names as specified.
+<<<END_JSON>>>"""
 
 
+few_shot_template_output = """
+Here is a worked example:
+
+[PYTHON]
+def f(s):
+    s = s + s
+    return "b" + s + "a"
+[/PYTHON]
+
+[THOUGHT]
+Let's execute the code step by step:
+
+1. The function f is defined, which takes a single argument s.
+2. The function is called with the argument "hi", so within the function, s is initially "hi".
+3. Inside the function, s is concatenated with itself, so s becomes "hihi".
+4. The function then returns a new string that starts with "b", followed by the value of s (which is now "hihi"), and ends with "a".
+5. The return value of the function is therefore "bhihia".
+[/THOUGHT]
+
+[ANSWER]
+{"output": "bhihia"}
+[/ANSWER]
+"""
+
+
+few_shot_template_input = """
+Here is a worked example:
+
+[PYTHON]
+def f(x):
+    return x + 1
+[/PYTHON]
+
+[THOUGHT]
+To find an input such that executing f on the input leads to the given output, we can work backwards from the given assertion. We know that f(??) == 17. 
+
+Since the function f(x) returns x + 1, for f(??) to be equal to 17, the value of ?? should be 16. 
+[/THOUGHT]
+
+[ANSWER]
+{"input": 16}
+[/ANSWER]
+"""
 
 solution_prefix="""from itertools import accumulate, chain, combinations, count, permutations, product, groupby, islice, repeat
 from copy import deepcopy

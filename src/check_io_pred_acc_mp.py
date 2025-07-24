@@ -6,6 +6,8 @@ import multiprocessing as mp
 from tqdm import tqdm
 from itertools import islice
 import json
+import math
+import pandas as pd
 from multiprocessing.pool import ThreadPool
 from collections import defaultdict
 
@@ -13,15 +15,21 @@ from collections import defaultdict
 python_path = "python"
 run_path = "./temp/temp/temp"
 
-import math
-import json
-import pandas as pd
+ALGO_CONFIG = {
+    "lzw":     dict(expected_type=list,          item_type=int,        float_tol=None),
+    "huffman": dict(expected_type=list,          item_type=int,        float_tol=None),
+    "rle":     dict(expected_type=list,          item_type=(list, tuple), float_tol=None),
+    "ae":      dict(expected_type=(int, float),  item_type=None,       float_tol=1e-3),
+}
 
+SYNONYMS = {
+    "input":  ("input", "uncompressed"),
+    "output": ("output", "compressed"),
+}
 
 def check_io_pred_acc(item, algo):
-    tol = 0.001  # tolerance for AE
+    tol = 1e-3
 
-    # unified response helper
     def _make_response(status, message, actual=None, predicted=None):
         return {
             "status":    status,
@@ -30,45 +38,26 @@ def check_io_pred_acc(item, algo):
             "predicted": json.dumps(predicted) if predicted is not None else None,
         }
 
-    # extract last JSON blob
-    output_str = item["output"]
-    last_json = extract_last_complete_json(output_str) 
+    # 1) Validate algorithm
+    if algo not in ALGO_CONFIG:
+        return _make_response("no answer", f"Unknown algorithm '{algo}'")
 
-    # lookup ground truth
-    ori_item = parsed_ios[item["itemid"]]
-    ori_io   = ori_item["ios"][item["ioid"]]
-    io_pred  = item["io_pred"]
-
-    # synonyms for top‐level and nested keys
-    synonyms = {
-        "input":  ["input", "uncompressed"],
-        "output": ["output", "compressed"],
-    }
-
-    # decide primary side and expected type/value
+    # 2) Determine which side to check
+    io_pred = item.get("io_pred", "")
     if io_pred.startswith("output"):
-        primary  = "output"
-        expected = ori_io["output"]
-        # pick the right expected type per algorithm
-        if algo == "lzw":
-            # LZW outputs a list of ints
-            expected_type      = list
-            expected_item_type = int
-        elif algo == "ae":
-            # Arithmetic encoding outputs a single float
-            expected_type      = float
-            expected_item_type = None
-        elif algo == "rle":
-            # RLE outputs a list of (char, count) tuples
-            expected_type      = list
-            expected_item_type = tuple
-
+        primary = "output"
     elif io_pred.startswith("input"):
-        primary       = "input"
-        # assume only one entry in ori_io["input"]
-        expected      = ori_io["input"]
-        expected_type = str
+        primary = "input"
+    else:
+        return _make_response("no answer", f"Unknown io_pred '{io_pred}'")
 
+    # 3) Lookup ground truth
+    ori      = parsed_ios[item["itemid"]]["ios"][item["ioid"]]
+    expected = ori[primary]
+
+    # 4) Extract the student's last JSON
+    output_str = item.get("output", "")
+    last_json  = extract_last_complete_json(output_str)
     if last_json is None:
         return _make_response(
             "no answer",
@@ -76,7 +65,6 @@ def check_io_pred_acc(item, algo):
             actual=expected,
             predicted="no answer"
         )
-
     if not isinstance(last_json, dict):
         return _make_response(
             "no answer",
@@ -85,82 +73,117 @@ def check_io_pred_acc(item, algo):
             predicted="no answer"
         )
 
-    if expected_item_type and not all(isinstance(x, expected_item_type) for x in expected):
-        raise TypeError(f"Expected list of {expected_item_type.__name__} for {algo} output")
+    # 5) Helper to pick top‐level (and optional nested) key
+    def extract_predicted(blob, side):
+        for top in SYNONYMS[side]:
+            if top in blob:
+                val, used = blob[top], top
+                if isinstance(val, dict):
+                    for inner in SYNONYMS[side]:
+                        if inner in val:
+                            val, used = val[inner], f"{top}.{inner}"
+                            break
+                    else:
+                        raise KeyError(f"No nested field {SYNONYMS[side]} inside '{top}'")
+                return val, used
+        raise KeyError(f"No field {SYNONYMS[side]} in the last JSON")
 
-    # find a top‐level key the student used
-    found_key = None
-    for key in synonyms[primary]:
-        if key in last_json:
-            found_key = key
-            break
-    if found_key is None:
-        a, b = synonyms[primary]
-        return _make_response("no answer",
-                              f"No field '{a}' or '{b}' in the last JSON!",
-                              actual=expected,
-                              predicted="no answer")
+    try:
+        raw_value, used_key = extract_predicted(last_json, primary)
+    except KeyError as e:
+        return _make_response("no answer", str(e), actual=expected, predicted="no answer")
 
-    # extract the actual predicted value, handling nested dicts
-    raw_value = last_json[found_key]
-    pred      = None
-    used_key  = None
+    # 6) Decode & type‐check
+    if primary == "input":
+        if not isinstance(raw_value, str):
+            return _make_response(
+                "no answer",
+                f"Field '{used_key}' is not of type str!",
+                actual=expected,
+                predicted="no answer"
+            )
+        pred = raw_value
 
-    if isinstance(raw_value, dict):
-        # they did {"input": {"uncompressed": "..."}}
-        for inner_key in synonyms[primary]:
-            if inner_key in raw_value and isinstance(raw_value[inner_key], expected_type):
-                pred     = raw_value[inner_key]
-                used_key = f"{found_key}.{inner_key}"
-                break
-        if pred is None:
-            a, b = synonyms[primary]
-            return _make_response("no answer",
-                          f"No nested field '{a}' or '{b}' inside '{found_key}'!",
-                          actual=expected,
-                          predicted="no answer")
-    else:
-        # they did {"input": "..."} or {"output": [...]}
-        if isinstance(raw_value, expected_type):
-            pred     = raw_value
-            used_key = found_key
+    else:  # primary == "output"
+        cfg = ALGO_CONFIG[algo]
+
+        if algo == "ae":
+            if isinstance(raw_value, (int, float)):
+                pred = float(raw_value)
+            elif isinstance(raw_value, str):
+                try:
+                    pred = float(raw_value)
+                except ValueError:
+                    return _make_response(
+                        "no answer",
+                        f"Field '{used_key}' string value cannot be parsed as float",
+                        actual=expected,
+                        predicted="no answer"
+                    )
+            else:
+                return _make_response(
+                    "no answer",
+                    f"Field '{used_key}' is not a float or float‐string!",
+                    actual=expected,
+                    predicted="no answer"
+                )
+
         else:
-            return _make_response("no answer",
-                                 f"Field '{found_key}' is not of type {expected_type.__name__}!",
-                                 actual=expected,
-                                 predicted="no answer")
+            # lzw, huffman, rle
+            if not isinstance(raw_value, cfg["expected_type"]):
+                return _make_response(
+                    "no answer",
+                    f"Field '{used_key}' is not of type {cfg['expected_type'].__name__}!",
+                    actual=expected,
+                    predicted="no answer"
+                )
+            if cfg["item_type"] is not None:
+                if not all(isinstance(x, cfg["item_type"]) for x in raw_value):
+                    return _make_response(
+                        "no answer",
+                        f"Elements of '{used_key}' must be {cfg['item_type'].__name__}!",
+                        actual=expected,
+                        predicted="no answer"
+                    )
 
-    # correctness check
+            # Normalize RLE lists → tuples
+            if algo == "rle":
+                try:
+                    pred = [tuple(el) for el in raw_value]
+                except Exception:
+                    return _make_response(
+                        "no answer",
+                        f"Field '{used_key}' is not a list of 2‑tuples",
+                        actual=expected,
+                        predicted="no answer"
+                    )
+            else:
+                pred = raw_value
+
+    # 7) Check correctness
     if primary == "input":
         correct = (pred == expected)
     else:
-        if algo in ("lzw", "rle"):
-            correct = (pred == expected)
-        else:  # ae
+        if algo == "ae":
             correct = math.isclose(pred, expected, rel_tol=tol, abs_tol=tol)
+        else:
+            correct = (pred == expected)
 
-
-    # validate algorithm
-    if algo not in ("lzw", "ae", "rle"):
-        return _make_response(
-            "no answer",
-            f"Unknown algorithm '{algo}'",
-        )
-
+    # 8) Return result
     if correct:
         return _make_response(
             "correct",
             f"Correct {io_pred}! (used key '{used_key}')",
             actual=expected,
-            predicted=pred,
+            predicted=pred
         )
 
-    # mismatch
-    given_side = "input" if primary == "output" else "output"
+    # Mismatch
+    other = "input" if primary == "output" else "output"
     msg = (
         "[Mismatch] Your "
         f"{primary} is not correct!\n"
-        f"Given {given_side}:      {json.dumps(ori_io[given_side])}\n"
+        f"Given {other}:      {json.dumps(ori[other])}\n"
         f"Predicted {primary}:   {pred!r}  (via '{used_key}')\n"
         f"Actual {primary}:      {expected!r}"
     )
@@ -168,119 +191,8 @@ def check_io_pred_acc(item, algo):
         "wrong",
         msg,
         actual=expected,
-        predicted=pred,
+        predicted=pred
     )
-
-
-
-# def check_io_pred_acc(item, algo):
-#     result = {}
-#     tol = 0.001  # tolerance for AE algorithm
-#     import json
-#     # assume is_close is defined elsewhere
-#     # from your_module import is_close  
-
-#     # small helpers
-#     def _error(msg):
-#         return {"status": "no answer", "message": msg}
-#     def _wrong(msg):
-#         return {"status": "wrong",    "message": msg}
-#     def _correct(msg):
-#         return {"status": "correct",   "message": msg}
-
-#     # validate algorithm
-#     if algo not in ("lzw", "ae"):
-#         return _error(f"Unknown algorithm '{algo}'")
-
-#     # 1) extract last JSON
-#     last_json = extract_last_complete_json(item["output"])
-#     if last_json is None:
-#         return _error("Fail to extract a complete and valid JSON from the output!")
-#     if not isinstance(last_json, dict):
-#         return _error("The last JSON is not an object!")
-
-#     # 2) lookup ground truth
-#     ori = parsed_ios[item["itemid"]]["ios"][item["ioid"]]
-
-#     # 3) decide expected value, type, and candidate keys
-#     io_pred = item["io_pred"]
-#     if algo == "lzw":
-#         # LZW: outputs are lists, inputs are strings
-#         if io_pred.startswith("output"):
-#             expected = ori["output"]
-#             expected_type = list
-#         elif io_pred.startswith("input"):
-#             expected = next(iter(ori["input"].values()))
-#             expected_type = str
-#         else:
-#             return _error(f"Unknown io_pred '{io_pred}'")
-#     else:  # algo == "ae"
-#         # AE: outputs are floats, inputs are strings
-#         if io_pred.startswith("output"):
-#             expected = ori["output"]
-#             expected_type = float
-#         elif io_pred.startswith("input"):
-#             expected = next(iter(ori["input"].values()))
-#             expected_type = str
-#         else:
-#             return _error(f"Unknown io_pred '{io_pred}'")
-
-#     # same candidate ordering in both cases
-#     candidates = ["output", "input"] if io_pred.startswith("output") else ["input", "output"]
-
-#     # 4) pick the predicted value
-#     pred = None
-#     used_key = None
-#     for key in candidates:
-#         if key in last_json and isinstance(last_json[key], expected_type):
-#             pred = last_json[key]
-#             used_key = key
-#             break
-
-#     # 5) error if missing or wrong type
-#     if pred is None:
-#         if not any(k in last_json for k in candidates):
-#             return _error(f"No field '{candidates[0]}' or '{candidates[1]}' in the last JSON!")
-#         for k in candidates:
-#             if k in last_json and not isinstance(last_json[k], expected_type):
-#                 return _error(f"Field '{k}' is not of type {expected_type.__name__}!")
-#         return _error("Could not locate a valid I/O field in the last JSON!")
-
-#     # 6) correctness check
-#     if io_pred.startswith("input"):
-#         # input prediction always exact compare
-#         correct = (pred == expected)
-#     else:
-#         # output prediction: LZW exact, AE via is_close
-#         if algo == "lzw":
-#             correct = (pred == expected)
-#         else:  # ae
-#             correct = math.isclose(pred, expected, rel_tol=tol, abs_tol=tol)
-
-#     if correct:
-#         return _correct(f"Correct {io_pred}! (used key '{used_key}')")
-
-#     # 7) mismatch message
-#     if io_pred.startswith("output"):
-#         msg = (
-#             "[Mismatch] Your output is not correct!\n"
-#             f"Given input:       {json.dumps(ori['input'])}\n"
-#             f"Predicted output:  {pred}\n"
-#             f"Actual output:     {expected}"
-#         )
-
-#     else:
-#         msg = (
-#             "[Mismatch] Your input is not correct!\n"
-#             f"Given output:      {json.dumps(ori['output'])}\n"
-#             f"Predicted input:   {pred}\n"
-#             f"Actual input:      {expected}"
-#         )
-
-#     result["actual"] = expected
-#     result["predicted"] = pred
-
-#     return _wrong(msg)
 
 
 # Function to batch items from an iterator
@@ -305,7 +217,7 @@ def main():
     parser.add_argument("--pred_file_name", type=str)
     parser.add_argument("--res_file_name", type=str)
     parser.add_argument("--batchsize", type=int)
-    parser.add_argument('--algo', type=str, choices=['lzw', 'ae', 'rle'])
+    parser.add_argument('--algo', type=str, choices=['lzw', 'ae', 'rle', 'huffman'])
     parser.add_argument('--python_path', type=str, default="python")
     parser.add_argument('--run_path', type=str, default="./temp/temp/temp")
     args = parser.parse_args()
@@ -325,18 +237,18 @@ def main():
 
     dt = load_jsonl_yield(pred_file_name)
 
-    if os.path.exists(res_file_name):
-        existing = get_total_items_with_wc(res_file_name)
-    else:
-        existing = 0
+    # if os.path.exists(res_file_name):
+    #     existing = get_total_items_with_wc(res_file_name)
+    # else:
+    #     existing = 0
 
-    print(f"Existing items: {existing}, skipping them.")
-    dt = islice(dt, existing, None)
+    # print(f"Existing items: {existing}, skipping them.")
+    # dt = islice(dt, existing, None)
 
-    total_num_items = get_total_items_with_wc(pred_file_name) - existing
+    # total_num_items = get_total_items_with_wc(pred_file_name) - existing
     batchsize = args.batchsize
 
-    pbar = tqdm(total=total_num_items)
+    # pbar = tqdm(total=total_num_items)
 
     csv_rows = []
 
@@ -353,7 +265,7 @@ def main():
             res = check_io_pred_acc(item, algo=args.algo)
             item['res'] = res
             batchstat[res['status']] += 1
-            print(csv_rows)
+            # print(csv_rows)
             # collect for CSV
             csv_rows.append({
                 "model": item.get("model"),
@@ -372,6 +284,7 @@ def main():
                 "model": item.get("model"),
                 "temperature": item.get("temperature"),
                 "io_pred": item.get("io_pred"),
+                "category": item.get("category"),
                 "actual": json.loads(res.get("actual", "null")),
                 "predicted": json.loads(res.get("predicted", "null"))
             })
@@ -382,9 +295,9 @@ def main():
 
         print(f"Wrote a batch of {len(batch)} items.")
         print(f"Batch {batch_idx} status: {batchstat}")
-        pbar.update(len(batch))
+    #     pbar.update(len(batch))
 
-    pbar.close()
+    # pbar.close()
 
     df_items = pd.DataFrame(csv_rows)
     df_items.to_csv(f"{res_file_name.replace('.jsonl', '.csv')}", index=False)

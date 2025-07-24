@@ -1,0 +1,17 @@
+tqdm
+snoop
+Pympler
+vllm
+bitsandbytes
+streamlit
+autopep8
+plotly
+datasets
+python-Levenshtein
+fuzzywuzzy
+openai
+transformers
+logits_processor_zoo
+pympler
+dotenv
+huggingface_hub
