@@ -2,6 +2,7 @@ import json
 import subprocess
 import sys
 import re
+import ast
 from pympler import asizeof
 from decimal import Decimal
 
@@ -329,6 +330,7 @@ def sub_extract_last_complete_json(s):
                 pass
     return None
 
+
 def extract_last_complete_json(s):
     res = sub_extract_last_complete_json(s)
     if res is None:
@@ -340,6 +342,11 @@ def extract_last_complete_json(s):
         boxcontent = s[boxstart:boxend]
         processed_box_content = boxcontent.replace("\\\\","\\").replace("\\{","{").replace("\\}","}").replace('\\left','').replace('\\right','')
         res = sub_extract_last_complete_json(processed_box_content)
+    else:
+        matches = re.findall(r'\[ANSWER\](.*?)\[/ANSWER\]', s, flags=re.DOTALL)
+        if not matches:
+            return None
+        return matches[-1].strip()
     return res
 
 def strict_check_size(obj):

@@ -1,4 +1,6 @@
 model_sizes = {
+    "01-ai/Yi-Coder-9B-Chat":                    "8.8B",
+    "google/codegemma-7b-it":                    "8.5B",
     "Qwen/Qwen3-4B":                             "4B",
     "Qwen/Qwen3-8B":                             "8B",
     "Qwen/Qwen3-32B":                            "32.8B",
@@ -30,6 +32,7 @@ model_sizes = {
 
 
 model_categories = {
+    "01-ai/Yi-Coder-9B-Chat":                   "Code Generation",
     "Qwen/Qwen3-4B":                            "General Instruction",
     "Qwen/Qwen3-8B":                            "General Instruction",
     "Qwen/Qwen3-32B":                           "General Instruction",
@@ -39,6 +42,7 @@ model_categories = {
     "mistralai/Codestral-22B-v0.1":             "Code Generation",
     "Qwen/Qwen2.5-Coder-32B-Instruct":          "Code Generation",
     "deepseek-ai/deepseek-coder-33b-instruct":  "Code Generation",
+    "google/codegemma-7b-it":                   "Code Generation",
     "microsoft/Phi-3-mini-128k-instruct":       "General Instruction",
     "microsoft/Phi-3.5-mini-instruct":          "General Instruction",
     "microsoft/phi-4":                          "General Instruction",

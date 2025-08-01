@@ -17,56 +17,53 @@ class SyntheticDataGenerator:
 
     def generate_string_data(self, count=100):
         entries = []
-        # char_repeat
-        for _ in range(10):
+        # 14 categories (≥10)
+        for _ in range(count // 14):
             char = random.choice(string.ascii_uppercase)
-            length = random.randint(5, 30)
-            entries.append((char * length, "char_repeat"))
-        # alternating_pattern
+            entries.append((char * random.randint(5, 30), "char_repeat"))
+
         for size in range(2, 7):
             pattern = ''.join(string.ascii_uppercase[:size])
             repeat = random.randint(3, 10)
             entries.append(((pattern * repeat)[:random.randint(size * 3, size * 10)],
                             "alternating_pattern"))
-        # block_repeat
+
         for size in range(3, 9):
             block = ''.join(random.choices(string.ascii_uppercase, k=size))
-            repeat = random.randint(2, 8)
-            entries.append((block * repeat, "block_repeat"))
-        # nested_repeat
-        for _ in range(10):
+            entries.append((block * random.randint(2, 8), "block_repeat"))
+
+        for _ in range(count // 14):
             base = ''.join(random.choices(string.ascii_uppercase, k=3))
             nested = base + base[::-1] + base
             entries.append((nested * random.randint(2, 5), "nested_repeat"))
-        # palindrome
-        for _ in range(5):
+
+        for _ in range(count // 14):
             half = ''.join(random.choices(string.ascii_uppercase, k=5))
             entries.append((half + half[::-1], "palindrome"))
-        # near_palindrome
-        for _ in range(5):
+
+        for _ in range(count // 14):
             s = ''.join(random.choices(string.ascii_uppercase, k=11))
-            mid = random.randint(0, len(s) - 1)
-            pal = s[:mid] + s[mid] + s[:mid][::-1]
-            entries.append((pal, "near_palindrome"))
-        # pangram
+            mid = random.randint(0, len(s)-1)
+            entries.append((s[:mid] + s[mid] + s[:mid][::-1], "near_palindrome"))
+
         pangram = "THE_QUICK_BROWN_FOX_JUMPS_OVER_THE_LAZY_DOG"
         entries.append((pangram, "pangram"))
         entries.append((pangram * 2, "pangram"))
-        # pangram_mixed
-        for _ in range(8):
+
+        for _ in range(count // 14):
             entries.append((' '.join(random.sample(pangram.split('_'), 5)),
                             "pangram_mixed"))
-        # keyboard
+
         row = "QWERTYUIOP"
         entries.append((row, "keyboard"))
         entries.append((row[::-1], "keyboard"))
-        # keyboard_repeat
-        for _ in range(8):
-            chunk = row[random.randint(0, len(row) - 5):
+
+        for _ in range(count // 14):
+            chunk = row[random.randint(0, len(row)-5):
                         random.randint(5, len(row))]
             entries.append((chunk * random.randint(2, 6), "keyboard_repeat"))
-        # pseudo_random
-        for _ in range(10):
+
+        for _ in range(count // 14):
             base = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             s = ''.join(random.choices(string.ascii_uppercase + string.digits,
                                        k=random.randint(5, 15)))
@@ -74,7 +71,7 @@ class SyntheticDataGenerator:
                 i = random.randint(0, len(s))
                 s = s[:i] + base + s[i:]
             entries.append((s, "pseudo_random"))
-        # natural_language
+
         sentences = [
             "compression is the transformation of data to reduce its size",
             "lossless algorithms preserve every bit of the original data",
@@ -85,70 +82,75 @@ class SyntheticDataGenerator:
         for s in sentences:
             entries.append((s, "natural_language"))
             entries.append((s + " " + s, "natural_language_repeat"))
-        # random_motif
-        for _ in range(10):
+
+        for _ in range(count // 14):
             s = ''.join(chr(random.randint(32, 126)) for _ in range(100))
             motif = ''.join(random.choices(string.ascii_lowercase, k=5))
             idx = random.randint(0, 95)
-            s = s[:idx] + motif + s[idx:]
-            entries.append((s, "random_motif"))
-        return entries[:count]
+            entries.append((s[:idx] + motif + s[idx:], "random_motif"))
+
+        # ─── prefix every category with "string/" ───────────────────────────
+        prefixed = [(text, f"string_{cat}") for text, cat in entries]
+        return prefixed[:count]
 
     def generate_log_data(self, count=100):
         """
-        Returns a list of (log_text, category, metadata) tuples.
-        Categories:
-          • slow_request   – duration > 2.5s
-          • status_check   – endpoint == "/status"
-          • db_error       – module=="db" & level=="ERROR"
-          • auth_failure   – module=="auth" & level in (WARNING, ERROR, CRITICAL)
-        Fallback: lowercase log level.
+        Now defines 11 categories:
+          slow_request, status_check, metrics_request, auth_login,
+          db_error, auth_failure,
+          info, debug, warning, error, critical
         """
         entries = []
         levels    = ["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"]
-        endpoints = ["/api/v1/user", "/api/v1/order", "/status", "/metrics",
-                     "/auth/login", "/home"]
-        methods   = ["GET", "POST", "PUT", "DELETE"]
+        endpoints = ["/api/v1/user", "/api/v1/order", "/status",
+                     "/metrics", "/auth/login", "/home"]
         modules   = ["auth", "server", "db", "cache", "worker"]
+        methods   = ["GET", "POST", "PUT", "DELETE"]
+
         for _ in range(count):
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            level     = random.choice(levels)
-            method    = random.choice(methods)
-            endpoint  = random.choice(endpoints)
-            duration  = round(random.uniform(0.1, 3.0), 3)
-            user_id   = uuid.uuid4().hex[:8]
-            module    = random.choice(modules)
-            ip        = f"192.168.{random.randint(0,255)}.{random.randint(0,255)}"
-            msg = (
-                f"[{timestamp}] {level} - {method} {endpoint} "
-                f"by user:{user_id} in {duration}s from {ip} ({module})"
-            )
+            ts       = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            level    = random.choice(levels)
+            endpoint = random.choice(endpoints)
+            duration = round(random.uniform(0.1, 3.0), 3)
+            module   = random.choice(modules)
+            method   = random.choice(methods)
+            ip       = f"192.168.{random.randint(0,255)}.{random.randint(0,255)}"
+
+            msg = (f"[{ts}] {level} - {method} {endpoint} "
+                   f"by user:{uuid.uuid4().hex[:8]} in {duration}s from {ip} ({module})")
+
             if duration > 2.5:
                 category = "slow_request"
             elif endpoint == "/status":
                 category = "status_check"
+            elif endpoint == "/metrics":
+                category = "metrics_request"
+            elif endpoint == "/auth/login":
+                category = "auth_login"
             elif module == "db" and level == "ERROR":
                 category = "db_error"
             elif module == "auth" and level in ("WARNING", "ERROR", "CRITICAL"):
                 category = "auth_failure"
             else:
                 category = level.lower()
-            entries.append((
-                msg,
-                category,
-                {
-                    "method":   method,
-                    "endpoint": endpoint,
-                    "module":   module,
-                    "duration": duration
-                }
-            ))
-        return entries[:count]
+
+            entries.append((msg, category, {
+                "method":   method,
+                "endpoint": endpoint,
+                "module":   module,
+                "duration": duration
+            }))
+
+        # ─── prefix every category with "log/" ──────────────────────────────
+        prefixed = []
+        for text, cat, meta in entries:
+            prefixed.append((text, f"log_{cat}", meta))
+        return prefixed[:count]
 
     def generate_yaml_data(self, count=100):
         """
         Returns a list of (yaml_text, subtype) tuples.
-        Subtypes include:
+        Subtypes include at least these 10:
           app_config, k8s_deployment, docker_compose,
           helm_values, ansible_playbook, prometheus_config,
           github_actions, circleci_config,
@@ -160,22 +162,9 @@ class SyntheticDataGenerator:
   name: MyService
   version: 1.2.3
   debug: false
-database:
-  host: db.example.com
-  port: 5432
-  user: service_user
-  password: s3cr3t
-features:
-  - auth
-  - payments
-  - notifications
-logging:
-  level: INFO
-  outputs:
-    - console
-    - file: /var/log/myservice.log
 """, "app_config"),
-            # Kubernetes Deployment w/ anchors & aliases
+
+            # Kubernetes Deployment
             ("""apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -184,17 +173,16 @@ spec:
   replicas: 3
   template:
     metadata:
-      labels: &labels { app: web }
+      labels:
+        app: web
     spec:
       containers:
         - name: frontend
           image: example/web:stable
           ports:
             - containerPort: 80
-        - <<: *labels
-          name: backend
-          image: example/backend:latest
 """, "k8s_deployment"),
+
             # Docker Compose
             ("""version: "3.8"
 services:
@@ -202,46 +190,27 @@ services:
     build: .
     ports:
       - "8080:80"
-    volumes:
-      - .:/usr/src/app
-    environment:
-      - DEBUG=1
-  redis:
-    image: redis:6-alpine
-    restart: always
 """, "docker_compose"),
-            # Helm values + multi-doc
+
+            # Helm values (multi‐doc)
             ("""# Default values for mychart
 ---
 replicaCount: 2
 image:
   repository: nginx
   tag: stable
-service:
-  type: LoadBalancer
-  port: 80
----
-ingress:
-  enabled: true
-  hosts:
-    - host: chart-example.local
-      paths:
-        - /
 """, "helm_values"),
+
             # Ansible playbook
-            ("""- hosts: webservers
-  become: yes
+            ("""- hosts: all
   tasks:
-    - name: ensure nginx is at the latest version
+    - name: ensure git installed
       apt:
-        name: nginx
-        state: latest
-    - name: copy config file
-      template:
-        src: nginx.conf.j2
-        dest: /etc/nginx/nginx.conf
+        name: git
+        state: present
 """, "ansible_playbook"),
-            # Prometheus scrape config
+
+            # Prometheus config
             ("""global:
   scrape_interval: 15s
 scrape_configs:
@@ -249,78 +218,60 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9100']
 """, "prometheus_config"),
-            # GitHub Actions Workflow
+
+            # GitHub Actions workflow
             ("""name: CI
 on: [push, pull_request]
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Run tests
-        run: pytest
 """, "github_actions"),
+
             # CircleCI config
             ("""version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.9
     steps:
       - checkout
-      - run: pip install -r requirements.txt
       - run: pytest
 """, "circleci_config"),
+
             # AWS CloudFormation
             ("""AWSTemplateFormatVersion: '2010-09-09'
 Resources:
   MyBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: my-sample-bucket
+      BucketName: my-unique-bucket
 """, "cloudformation"),
+
             # Terraform module
-            ("""terraform
-terraform:
-  required_version: ">= 0.14"
-  required_providers:
-    aws:
-      source: hashicorp/aws
-      version: "~> 3.0"
-resource:
-  aws_s3_bucket:
-    bucket: my-terraform-bucket
-    acl: private
+            ("""terraform {
+  required_version = ">= 0.14"
+}
+resource "aws_s3_bucket" "b" {
+  bucket = "my-tf-bucket"
+  acl    = "private"
+}
 """, "terraform_module"),
         ]
-        entries = []
-        for _ in range(count):
-            yaml_text, subtype = random.choice(samples)
-            entries.append((yaml_text, subtype))
-        return entries
+
+        entries = [random.choice(samples) for _ in range(count)]
+
+        # ─── prefix every category with "yaml/" ─────────────────────────────
+        prefixed = [(text, f"yaml_{cat}") for text, cat in entries]
+        return prefixed
     
     def generate_tabular_data(self, count=100):
         """
-        Returns a list of (table_text, category) tuples, where `table_text`
-        is either CSV or TSV, and category describes its pattern.
-        
-        Categories (10 total):
-          • csv_numeric
-          • csv_alphanumeric
-          • csv_mixed_types
-          • csv_repeated_header
-          • csv_sparse
-          • tsv_numeric
-          • tsv_alphanumeric
-          • tsv_mixed_types
-          • tsv_repeated_header
-          • tsv_sparse
+        10 categories: csv_numeric, csv_alphanumeric, csv_mixed_types,
+                       csv_repeated_header, csv_sparse,
+                       tsv_numeric, tsv_alphanumeric, tsv_mixed_types,
+                       tsv_repeated_header, tsv_sparse
         """
         categories = [
             "csv_numeric", "csv_alphanumeric", "csv_mixed_types",
@@ -330,64 +281,47 @@ resource:
         ]
         entries = []
         per_cat = max(1, count // len(categories))
-        
+
         for cat in categories:
             is_csv = cat.startswith("csv")
             sep    = "," if is_csv else "\t"
-            
             for _ in range(per_cat):
-                # choose 5 column names
                 cols = [f"col{i}" for i in range(1,6)]
-                
-                # Build rows according to category
                 rows = []
-                for row_idx in range(10):
+                for __ in range(5):
                     if "numeric" in cat:
-                        row = [str(random.randint(0, 1000)) for _ in cols]
+                        rows.append([str(random.randint(0,1000)) for _ in cols])
                     elif "alphanumeric" in cat:
-                        row = [
-                            ''.join(random.choices(string.ascii_uppercase+string.digits, k=5))
-                            for _ in cols
-                        ]
+                        rows.append([''.join(random.choices(string.ascii_uppercase+string.digits, k=5))
+                                     for _ in cols])
                     elif "mixed_types" in cat:
-                        row = []
-                        for i in range(len(cols)):
-                            if i % 3 == 0:
-                                row.append(str(random.randint(0, 500)))
-                            elif i % 3 == 1:
-                                row.append(random.choice(["TRUE","FALSE","NULL"]))
-                            else:
-                                row.append(
-                                    ''.join(random.choices(string.ascii_lowercase, k=4))
-                                )
+                        rows.append([
+                            random.choice([str(random.randint(0,500)),
+                                           random.choice(["TRUE","FALSE","NULL"]),
+                                           ''.join(random.choices(string.ascii_lowercase, k=4))])
+                            for _ in cols
+                        ])
                     elif "sparse" in cat:
-                        # mostly empty, occasional value
-                        row = [
-                            (str(random.randint(0,100)) if random.random()<0.2 else "")
-                            for _ in cols
-                        ]
+                        rows.append([str(random.randint(0,100)) if random.random()<0.2 else ""
+                                     for _ in cols])
                     else:
-                        # fallback to random strings
-                        row = [
-                            ''.join(random.choices(string.ascii_letters, k=3))
-                            for _ in cols
-                        ]
-                    rows.append(row)
-                
-                # Possibly duplicate header for *_repeated_header
-                all_lines = []
-                rep_count = 2 if "repeated_header" in cat else 1
-                for _ in range(rep_count):
-                    all_lines.append(sep.join(cols))
+                        rows.append([''.join(random.choices(string.ascii_letters, k=3))
+                                     for _ in cols])
 
+                # build lines, with repeated header if needed
+                lines = []
+                header_count = 2 if "repeated_header" in cat else 1
+                for __ in range(header_count):
+                    lines.append(sep.join(cols))
                 for r in rows:
-                    all_lines.append(sep.join(r))
-                
-                table_text = "\n".join(all_lines)
-                entries.append((table_text, cat))
-        
-        # trim to requested count
-        return entries[:count]
+                    lines.append(sep.join(r))
+
+                entries.append(("\n".join(lines), cat))
+
+        # ─── prefix every category with "tabular/" ──────────────────────────
+        prefixed = [(text, f"tabular_{cat}") for text, cat in entries]
+        return prefixed[:count]
+
 
 # ----------------------------
 # COMPRESSORS

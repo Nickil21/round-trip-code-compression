@@ -145,7 +145,7 @@ Since the function main_solution(x) returns x + 1, for main_solution(??) to be e
 [/THOUGHT]
 
 [ANSWER]
-{"input": 17}
+{"input": 16}
 [/ANSWER]
 
 The input and output requirements are as follows:
@@ -198,7 +198,7 @@ Since the function main_solution(x) returns x + 1, for main_solution(??) to be e
 [/THOUGHT]
 
 [ANSWER]
-{"input": 17}
+{"input": 16}
 [/ANSWER]
 
 The input and output requirements are as follows:

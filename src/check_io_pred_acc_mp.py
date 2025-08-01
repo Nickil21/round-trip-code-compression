@@ -17,7 +17,7 @@ run_path = "./temp/temp/temp"
 
 ALGO_CONFIG = {
     "lzw":     dict(expected_type=list,          item_type=int,        float_tol=None),
-    "huffman": dict(expected_type=list,          item_type=int,        float_tol=None),
+    "huffman": dict(expected_type=list,          item_type=list,        float_tol=None),
     "rle":     dict(expected_type=list,          item_type=(list, tuple), float_tol=None),
     "ae":      dict(expected_type=(int, float),  item_type=None,       float_tol=1e-3),
 }
@@ -57,14 +57,33 @@ def check_io_pred_acc(item, algo):
 
     # 4) Extract the student's last JSON
     output_str = item.get("output", "")
-    last_json  = extract_last_complete_json(output_str)
-    if last_json is None:
+    extracted = extract_last_complete_json(output_str)
+
+    # print(f"Extracted JSON: {extracted}")
+
+    if extracted is None:
         return _make_response(
             "no answer",
             "Fail to extract a complete and valid JSON from the output!",
             actual=expected,
             predicted="no answer"
         )
+
+    # If extract_last_complete_json already returned a Python object, use it directly
+    if isinstance(extracted, (dict, list)):
+        last_json = extracted
+    else:
+        # Otherwise we got back a JSON string, so parse it
+        try:
+            last_json = json.loads(extracted)
+        except json.JSONDecodeError:
+            return _make_response(
+                "no answer",
+                "Extracted text was not valid JSON!",
+                actual=expected,
+                predicted="no answer"
+            )
+
     if not isinstance(last_json, dict):
         return _make_response(
             "no answer",
@@ -72,7 +91,6 @@ def check_io_pred_acc(item, algo):
             actual=expected,
             predicted="no answer"
         )
-
     # 5) Helper to pick top‐level (and optional nested) key
     def extract_predicted(blob, side):
         for top in SYNONYMS[side]:
@@ -128,8 +146,32 @@ def check_io_pred_acc(item, algo):
                     predicted="no answer"
                 )
 
+        elif algo == "huffman":
+            # Expect a 3‑element list: [compressed_list, codebook_dict, meta_int]
+            # We expect a 3‑element list, but only care about the first (the compressed ints).
+            if not (isinstance(raw_value, list) and len(raw_value) >= 1):
+                return _make_response(
+                    "no answer",
+                    f"Expected a list with at least one element for Huffman output, got {type(raw_value).__name__}",
+                    actual=expected,
+                    predicted="no answer"
+                )
+            comp = raw_value[0]
+
+            # Validate it’s a list of ints
+            if not (isinstance(comp, list) and all(isinstance(x, int) for x in comp)):
+                return _make_response(
+                    "no answer",
+                    f"Compressed output must be list[int], got {comp!r}",
+                    actual=expected,
+                    predicted="no answer"
+                )
+
+            # Use just that for your comparison
+            pred = comp
+
         else:
-            # lzw, huffman, rle
+            # lzw, rle
             if not isinstance(raw_value, cfg["expected_type"]):
                 return _make_response(
                     "no answer",
@@ -141,7 +183,7 @@ def check_io_pred_acc(item, algo):
                 if not all(isinstance(x, cfg["item_type"]) for x in raw_value):
                     return _make_response(
                         "no answer",
-                        f"Elements of '{used_key}' must be {cfg['item_type'].__name__}!",
+                        f"Elements of '{used_key}' must be {cfg['item_type']}!",
                         actual=expected,
                         predicted="no answer"
                     )
@@ -271,6 +313,7 @@ def main():
                 "model": item.get("model"),
                 "temperature": item.get("temperature"),
                 "io_pred": item.get("io_pred"),
+                "category": item.get("category"),
                 "actual": json.loads(res.get("actual", "null")),
                 "predicted": json.loads(res.get("predicted", "null"))
             })
