@@ -1,7 +1,8 @@
 tqdm
 snoop
 Pympler
-vllm
+# vllm
+accelerate==1.7.0
 bitsandbytes
 streamlit
 autopep8

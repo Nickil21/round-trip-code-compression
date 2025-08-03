@@ -22,6 +22,13 @@ from vllm.sampling_params import RequestOutputKind
 
 from helper import model_sizes, model_categories
 
+
+print("torch.cuda.is_available():", torch.cuda.is_available())
+print("torch.cuda.device_count():", torch.cuda.device_count())
+
+if torch.cuda.is_available():
+    print("Device[0]:", torch.cuda.get_device_name(0))
+
 ###############################################
 max_try_one_call = 2
 llm = None
@@ -170,7 +177,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", default="Qwen/Qwen3-32B", type=str)  # "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B"  "Qwen/Qwen3-32B-FP8"
     parser.add_argument("--temperature", default=0.2, type=float)
     parser.add_argument("--max_tokens", default=16384, type=int)
-    parser.add_argument("--tp_size", default=4, type=int)
+    parser.add_argument("--tp_size", default=1, type=int)
     parser.add_argument("--num_completions", default=1, type=int, help="Number of completions to generate per prompt")
     parser.add_argument("--use_openai", action="store_true", help="If set, use OpenAI API instead of vLLM")
 

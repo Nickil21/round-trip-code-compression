@@ -18,6 +18,8 @@ if __name__ == "__main__":
     with open(args.data_dir + args.algorithm + os.sep + args.input_file, 'r') as f:
         lines = f.readlines()
 
+    # print(lines[0])
+
     idx_data = defaultdict(list)
     for line in lines:
         line = json.loads(line)
@@ -27,7 +29,8 @@ if __name__ == "__main__":
         if not trace_lines[-1].strip().startswith('<<< Return value from main_solution:'):
             continue
         num_trace_lines = len(trace_lines)
-        if num_trace_lines < 300: 
+        # print(num_trace_lines)
+        if num_trace_lines < 3000: 
             idx_data[line['problem_description']].append(line)
 
     total_data = []

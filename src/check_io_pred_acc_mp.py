@@ -6,6 +6,7 @@ import multiprocessing as mp
 from tqdm import tqdm
 from itertools import islice
 import json
+import ast
 import math
 import pandas as pd
 from multiprocessing.pool import ThreadPool
@@ -26,6 +27,21 @@ SYNONYMS = {
     "input":  ("input", "uncompressed"),
     "output": ("output", "compressed"),
 }
+
+
+
+def normalize(seq):
+    """
+    Recursively turn any tuple into a list, so that
+    [(1,2), [3,4], ((5,6),)]  →  [[1,2], [3,4], [[5,6]]]
+    """
+    if isinstance(seq, tuple):
+        seq = list(seq)
+    if isinstance(seq, list):
+        return [normalize(item) for item in seq]
+    return seq
+
+
 
 def check_io_pred_acc(item, algo):
     tol = 1e-3
@@ -172,6 +188,17 @@ def check_io_pred_acc(item, algo):
 
         else:
             # lzw, rle
+            if algo == "rle":
+                if isinstance(raw_value, str):
+                    try:
+                        raw_value = ast.literal_eval(raw_value)
+                    except Exception:
+                        return _make_response(
+                            "no answer",
+                            f"Field '{used_key}' string value cannot be parsed as Python list",
+                            actual=expected,
+                            predicted="no answer"
+                        )
             if not isinstance(raw_value, cfg["expected_type"]):
                 return _make_response(
                     "no answer",
@@ -191,7 +218,7 @@ def check_io_pred_acc(item, algo):
             # Normalize RLE lists → tuples
             if algo == "rle":
                 try:
-                    pred = [tuple(el) for el in raw_value]
+                    pred = [tuple(el) for el in raw_value]     
                 except Exception:
                     return _make_response(
                         "no answer",
@@ -208,6 +235,10 @@ def check_io_pred_acc(item, algo):
     else:
         if algo == "ae":
             correct = math.isclose(pred, expected, rel_tol=tol, abs_tol=tol)
+        elif algo == "rle":
+            correct = (normalize(pred) == normalize(expected))
+            # if correct:
+            #     print(f"RLE match: {pred} == {expected}")
         else:
             correct = (pred == expected)
 
@@ -313,6 +344,7 @@ def main():
                 "model": item.get("model"),
                 "temperature": item.get("temperature"),
                 "io_pred": item.get("io_pred"),
+                "input": item.get("input"),
                 "category": item.get("category"),
                 "actual": json.loads(res.get("actual", "null")),
                 "predicted": json.loads(res.get("predicted", "null"))
@@ -327,6 +359,7 @@ def main():
                 "model": item.get("model"),
                 "temperature": item.get("temperature"),
                 "io_pred": item.get("io_pred"),
+                "input": item.get("input"),
                 "category": item.get("category"),
                 "actual": json.loads(res.get("actual", "null")),
                 "predicted": json.loads(res.get("predicted", "null"))

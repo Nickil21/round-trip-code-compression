@@ -1,55 +1,35 @@
 #!/usr/bin/env bash
-set -euo pipefail
+#SBATCH --job-name=io-pred
+#SBATCH --output=slurm-logs/io-pred.%A_%a.out
+#SBATCH --error=slurm-logs/io-pred.%A_%a.err
+#SBATCH --partition=workq
+#SBATCH --array=0-319%32            # 208 tasks, max 64 running at once
+#SBATCH --gres=gpu:4                # four GPUs per task
+#SBATCH --cpus-per-task=4           # tweak per-GPU CPU as needed
+#SBATCH --mem=128G
+#SBATCH --time=1-00:00:00
 
-# ─── Setup Conda ─────────────────────────────────────────────────────────────
-CONDA_ROOT="/mnt_path/miniconda3"
-ENV_PATH="${CONDA_ROOT}/envs/round-trip-code-compression-env"
+#–– Which GPU did I get?
+nvidia-smi --list-gpus
 
-# ─── Create env if it doesn't exist ──────────────────────────────────────────
-if [ ! -d "${ENV_PATH}" ]; then
-  echo "Creating conda env at ${ENV_PATH} (Python 3.11)…"
-  conda create --prefix "${ENV_PATH}" python=3.11 -y
-else
-  echo "Conda env already exists at ${ENV_PATH}, skipping creation."
-fi
+# ─── ENV SETUP ────────────────────────────────────────────────────
+source ~/miniforge3/bin/activate
+conda activate round-trip-myenv \
+  || (conda create -y -n round-trip-myenv python=3.10 && conda activate round-trip-myenv)
 
-# ─── Activate it ──────────────────────────────────────────────────────────────
-export PATH="${CONDA_ROOT}/bin:${PATH}"
-eval "$(conda shell.bash hook)"
-conda activate "${ENV_PATH}"
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 
-# ─── Install Python requirements ──────────────────────────────────────────────
-pip install -r requirements.txt
-
-# ─── Load .env if present ────────────────────────────────────────────────────
-if [ -f .env ]; then
-  set -o allexport
-  source .env
-  set +o allexport
-fi
-
-# ─── Login to Hugging Face CLI ────────────────────────────────────────────────
-if command -v huggingface-cli >/dev/null; then
-  if [ -n "${HUGGINGFACE_TOKEN:-}" ]; then
-    echo "Logging in to Hugging Face CLI…"
-    huggingface-cli login --token "${HUGGINGFACE_TOKEN}"
-  else
-    echo "Warning: HUGGINGFACE_TOKEN not set; skipping hf-cli login."
-  fi
-else
-  echo "Warning: huggingface-cli not installed; skip login."
-fi
-
-# ─── Configuration (via ENV VARS) ─────────────────────────────────────────────
-ALGOS="${ALGOS:?ERROR: please set ALGOS (e.g. \"lzw ae bf cg\")}"
-TEMPERATURES="${TEMPERATURES:-0.2 0.8}"
-NUM_COMPLETIONS="${NUM_COMPLETIONS:-5}"
-
-
+# ─── GRID DEFINITION ─────────────────────────────────────────────
+ALGS=(rle lzw ae huffman)
 MODELS=(
-  'Qwen/Qwen3-4B'
-  'Qwen/Qwen3-8B'
-  'Qwen/Qwen3-32B'
+  'Qwen/Qwen2.5-7B-Instruct'
+  'mistralai/Mistral-7B-Instruct-v0.3'
+  '01-ai/Yi-Coder-9B-Chat'
+  'google/codegemma-7b-it'
+  # 'Qwen/Qwen3-4B'
+  # 'Qwen/Qwen3-8B'
+  # 'Qwen/Qwen3-32B'
   'meta-llama/Llama-3.2-1B-Instruct'
   'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
   'meta-llama/Llama-3.2-3B-Instruct'
@@ -59,6 +39,7 @@ MODELS=(
   'deepseek-ai/DeepSeek-R1-0528-Qwen3-8B'
   'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'
   'microsoft/phi-4'
+  'microsoft/phi-2'
   'deepseek-ai/DeepSeek-R1-Distill-Qwen-14B'
   'bigcode/starcoder2-15b-instruct-v0.1'
   'mistralai/Codestral-22B-v0.1'
@@ -73,79 +54,125 @@ MODELS=(
   'WizardLMTeam/WizardLM-70B-V1.0'
   'Qwen/Qwen2.5-72B-Instruct'
 )
+TEMPS=(0.2 0.8)
+NUM_COMPLETIONS=5
 
-nvidia-smi --list-gpus
+# ─── MAP ARRAY ID → (ALG, MODEL, TEMP) ───────────────────────────
+IDX=$SLURM_ARRAY_TASK_ID
+ALG_IDX=$(( IDX / ( ${#MODELS[@]} * ${#TEMPS[@]} ) ))
+ALG=${ALGS[$ALG_IDX]}
 
-# ─── How many models have we got? ────────────────────────────────────────────
-echo "Total models: ${#MODELS[@]}"
+REST=$(( IDX % ( ${#MODELS[@]} * ${#TEMPS[@]} ) ))
+MODEL_IDX=$(( REST / ${#TEMPS[@]} ))
+TEMP_IDX=$(( REST % ${#TEMPS[@]} ))
 
-# ─── Start Ray once for all algorithms ────────────────────────────────────────
-export RAY_TMPDIR=/tmp/ray
-ray stop || true
-ray start --head --temp-dir /tmp/ray --dashboard-host 0.0.0.0
+MODEL=${MODELS[$MODEL_IDX]}
+T=${TEMPS[$TEMP_IDX]}
 
-# ─── Parallelism settings ─────────────────────────────────────────────────────
-MAX_JOBS=1   # max concurrent algorithms
+echo "[$SLURM_JOB_ID:$SLURM_ARRAY_TASK_ID] → ALG=$ALG | MODEL=$MODEL | T=$T"
 
-# ─── Loop over each algorithm in parallel ────────────────────────────────────
-for ALG in ${ALGOS}; do
-  (
-    echo "[${ALG}] === Starting ==="
-    LOG_DIR="logs/${ALG}"; mkdir -p "${LOG_DIR}"
+# ─── DIRECTORIES ────────────────────────────────────────────────
+LOG_DIR="logs/${ALG}"
+mkdir -p "${LOG_DIR}"
 
-    echo "[${ALG}] Preparing data…"
-    python tasks/generate_data.py --algorithms "${ALG}" --source mixed --count 1
+DATA_DIR="processed_datasets/${ALG}"
+INPUT_JSON="${DATA_DIR}/data.jsonl"
+MSG_FILE="${DATA_DIR}/codeio_1k_msg.jsonl"
+GENS_PREFIX="${DATA_DIR}/codeio_1k_gens"
 
-    echo "[${ALG}] Building prompt messages…"
-    python src/build_codeio_msg.py \
-      --input_file "processed_datasets/${ALG}/data.jsonl" \
-      --output_file "processed_datasets/${ALG}/codeio_1k_msg.jsonl" \
-      --algorithm "${ALG}" \
-      --prompt_type "zero_shot"
+# ─── PREPARE DATA & PROMPTS ─────────────────────────────────────
+echo "[$SLURM_JOB_ID] Preparing data for $ALG"
+python tasks/generate_data.py \
+  --algorithms "${ALG}" \
+  --source mixed \
+  --count 50
 
-    DATA_DIR="processed_datasets/${ALG}"
-    INPUT_JSON="${DATA_DIR}/data.jsonl"
-    MSG_FILE="${DATA_DIR}/codeio_1k_msg.jsonl"
-    GENS_PREFIX="${DATA_DIR}/codeio_1k_gens"
+echo "[$SLURM_JOB_ID] Building prompts for $ALG"
+python src/build_codeio_msg.py \
+  --input_file "${INPUT_JSON}" \
+  --output_file "${MSG_FILE}" \
+  --algorithm "${ALG}" \
+  --prompt_type zero_shot
 
-    for model in ${MODELS}; do
-      MODEL_NAME="${model##*/}"
-      MODEL_NAME="${MODEL_NAME,,}"
-      MODEL_NAME="${MODEL_NAME//-/_}"
+# ─── INFERENCE WITH DYNAMIC TP_SIZE & MAX_LENGTH ───────────────
+TP_SIZES=(1 2 4)
+INITIAL_MAX_LENGTH=32768    # start high
+MIN_MAX_LENGTH=2048        # do not go below this
 
-      for T in ${TEMPERATURES}; do
-        echo "[${ALG}] → ${MODEL_NAME} @ T=${T}"
-        OUT_FILE="${GENS_PREFIX}_model_${MODEL_NAME}_temp_${T}_n${NUM_COMPLETIONS}.jsonl"
-        LOG_FILE="${LOG_DIR}/${MODEL_NAME}_temp_${T}_n${NUM_COMPLETIONS}.log"
-        RES_FILE="${OUT_FILE%.jsonl}_verified.jsonl"
+MODEL_TAG=$(echo "${MODEL##*/}" | tr '[:upper:]-' '[:lower:]_')
+OUT_FILE="${GENS_PREFIX}_model_${MODEL_TAG}_temp_${T}_n${NUM_COMPLETIONS}.jsonl"
+VERIF_FILE="${OUT_FILE%.jsonl}_verified.jsonl"
 
-        python src/batched_api_inference.py \
-          --model "${model}" \
-          --input "${MSG_FILE}" \
-          --output "${OUT_FILE}" \
-          --temperature "${T}" \
-          --num_completions "${NUM_COMPLETIONS}" \
-          > "${LOG_FILE}" 2>&1
+# start with FlashAttention enabled
+export VLLM_USE_V1=1
 
-        python src/check_io_pred_acc_mp.py \
-          --parsed_file_name "${INPUT_JSON}" \
-          --pred_file_name   "${OUT_FILE}" \
-          --res_file_name    "${RES_FILE}" \
-          --algo             "${ALG}"
-      done
-    done
+for TP in "${TP_SIZES[@]}"; do
+  ML=$INITIAL_MAX_LENGTH
 
-    echo "[${ALG}] === Done ==="
-  ) &
+  while true; do
+    LOG_FILE="${LOG_DIR}/${MODEL_TAG}_T${T}_tp${TP}_ml${ML}.log"
+    echo "[$SLURM_JOB_ID] Trying tp_size=${TP}, max_length=${ML}, VLLM_USE_V1=${VLLM_USE_V1}" | tee "${LOG_FILE}"
 
-  # throttle: wait if we've hit $MAX_JOBS concurrent jobs
-  while [ "$(jobs -rp | wc -l)" -ge "${MAX_JOBS}" ]; do
-    sleep 1
+    singularity exec --nv \
+      --bind "$(pwd)":/workspace \
+      /projects/public/brics/containers/e4s/e4s-cuda90-aarch64-25.06.sif \
+      bash -lc "export VLLM_USE_V1=${VLLM_USE_V1} && cd /workspace && \
+        /py3.10/bin/python src/batched_api_inference.py \
+          --model ${MODEL} \
+          --input ${MSG_FILE} \
+          --output ${OUT_FILE} \
+          --temperature ${T} \
+          --num_completions ${NUM_COMPLETIONS} \
+          --tp_size ${TP} \
+          --max_tokens ${ML}" \
+      >> "${LOG_FILE}" 2>&1
+    EXIT=$?
+
+    # Success
+    if [ $EXIT -eq 0 ]; then
+      echo "[$SLURM_JOB_ID] Success @ tp=${TP}, max_length=${ML}" | tee -a "${LOG_FILE}"
+      break 2
+    fi
+
+    # Out of Memory → next TP size
+    if grep -qi "out of memory" "${LOG_FILE}"; then
+      echo "[$SLURM_JOB_ID] OOM @ tp=${TP}; moving to next TP" | tee -a "${LOG_FILE}"
+      break
+    fi
+
+    # FlashAttention head-size error → disable V1 backend
+    if grep -qi "Head size .* not supported by FlashAttention" "${LOG_FILE}"; then
+      if [ "${VLLM_USE_V1}" -eq 0 ]; then
+        echo "[$SLURM_JOB_ID] Already using fallback backend; cannot recover" | tee -a "${LOG_FILE}"
+        exit 1
+      fi
+      export VLLM_USE_V1=0
+      echo "[$SLURM_JOB_ID] FlashAttention error; setting VLLM_USE_V1=0 and retrying" | tee -a "${LOG_FILE}"
+      continue
+    fi
+
+    # Generic max_length error → halve ML down to MIN_MAX_LENGTH
+    if grep -qi "ValueError: User-specified max_model_len" "${LOG_FILE}"; then
+      if [ ${ML} -le ${MIN_MAX_LENGTH} ]; then
+        echo "[$SLURM_JOB_ID] Reached min max_length=${MIN_MAX_LENGTH}; terminating" | tee -a "${LOG_FILE}"
+        exit 1
+      fi
+      ML=$(( ML / 2 ))
+      echo "[$SLURM_JOB_ID] max_length error; retrying with max_length=${ML}" | tee -a "${LOG_FILE}"
+      continue
+    fi
+
+    # Any other error → exit
+    echo "[$SLURM_JOB_ID] Unexpected error (exit $EXIT); see ${LOG_FILE}" >&2
+    exit $EXIT
   done
 done
 
-# ─── Wait for all to finish ───────────────────────────────────────────────────
-wait
+# ─── VERIFY OUTPUT ───────────────────────────────────────────────
+python src/check_io_pred_acc_mp.py \
+  --parsed_file_name "${INPUT_JSON}" \
+  --pred_file_name   "${OUT_FILE}" \
+  --res_file_name    "${VERIF_FILE}" \
+  --algo             "${ALG}"
 
-# ─── Stop Ray when everything’s finished ──────────────────────────────────────
-ray stop
+echo "[$SLURM_JOB_ID] Done."

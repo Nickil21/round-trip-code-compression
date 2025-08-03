@@ -68,8 +68,8 @@ if __name__ == "__main__":
         add_generation_prompt=True
     ) 
     org_count = len(inputs)
-    messages_list = [data for i, data in enumerate(messages_list) if len(inputs[i]) <= 16384]  # filter out messages longer than 16384 tokens
-    print(f"{org_count-len(messages_list)} inputs longer than 16384 tokens")
+    messages_list = [data for i, data in enumerate(messages_list) if len(inputs[i]) <= 32768]  # filter out messages longer than 32768 tokens
+    print(f"{org_count-len(messages_list)} inputs longer than 32768 tokens")
     print(f"Final Data Size: {len(messages_list)}")
     
     import json
