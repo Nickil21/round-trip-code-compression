@@ -3,17 +3,24 @@ import os
 import json
 import random
 import string
-import uuid
 import argparse
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ----------------------------
 # DATA GENERATOR
 # ----------------------------
 class SyntheticDataGenerator:
     def __init__(self, seed=42):
+        # 1) seed the RNG for full reproducibility
         random.seed(seed)
+
+        # 2) create a fixed list of 10 timestamps, 1 minute apart
+        base = datetime(2025, 1, 1, 0, 0, 0)
+        self.timestamps = [
+            (base + timedelta(minutes=i)).strftime("%Y-%m-%d %H:%M:%S")
+            for i in range(10)
+        ]
 
     def generate_string_data(self, count=100):
         entries = []
@@ -33,8 +40,8 @@ class SyntheticDataGenerator:
             entries.append((block * random.randint(2, 8), "block_repeat"))
 
         for _ in range(count // 14):
-            base = ''.join(random.choices(string.ascii_uppercase, k=3))
-            nested = base + base[::-1] + base
+            base3 = ''.join(random.choices(string.ascii_uppercase, k=3))
+            nested = base3 + base3[::-1] + base3
             entries.append((nested * random.randint(2, 5), "nested_repeat"))
 
         for _ in range(count // 14):
@@ -59,17 +66,18 @@ class SyntheticDataGenerator:
         entries.append((row[::-1], "keyboard"))
 
         for _ in range(count // 14):
-            chunk = row[random.randint(0, len(row)-5):
-                        random.randint(5, len(row))]
+            start = random.randint(0, len(row)-5)
+            end = random.randint(5, len(row))
+            chunk = row[start:end]
             entries.append((chunk * random.randint(2, 6), "keyboard_repeat"))
 
         for _ in range(count // 14):
-            base = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            base4 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             s = ''.join(random.choices(string.ascii_uppercase + string.digits,
                                        k=random.randint(5, 15)))
             for _ in range(3):
                 i = random.randint(0, len(s))
-                s = s[:i] + base + s[i:]
+                s = s[:i] + base4 + s[i:]
             entries.append((s, "pseudo_random"))
 
         sentences = [
@@ -89,13 +97,12 @@ class SyntheticDataGenerator:
             idx = random.randint(0, 95)
             entries.append((s[:idx] + motif + s[idx:], "random_motif"))
 
-        # ─── prefix every category with "string/" ───────────────────────────
-        prefixed = [(text, f"string_{cat}") for text, cat in entries]
-        return prefixed[:count]
+        # prefix every category with "string_"
+        return [(text, f"string_{cat}") for text, cat in entries][:count]
 
     def generate_log_data(self, count=100):
         """
-        Now defines 11 categories:
+        Categories:
           slow_request, status_check, metrics_request, auth_login,
           db_error, auth_failure,
           info, debug, warning, error, critical
@@ -108,7 +115,7 @@ class SyntheticDataGenerator:
         methods   = ["GET", "POST", "PUT", "DELETE"]
 
         for _ in range(count):
-            ts       = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            ts       = random.choice(self.timestamps)
             level    = random.choice(levels)
             endpoint = random.choice(endpoints)
             duration = round(random.uniform(0.1, 3.0), 3)
@@ -116,8 +123,11 @@ class SyntheticDataGenerator:
             method   = random.choice(methods)
             ip       = f"192.168.{random.randint(0,255)}.{random.randint(0,255)}"
 
+            # deterministic “UUID” via our seeded RNG:
+            hex_id = f"{random.getrandbits(32):08x}"
+
             msg = (f"[{ts}] {level} - {method} {endpoint} "
-                   f"by user:{uuid.uuid4().hex[:8]} in {duration}s from {ip} ({module})")
+                   f"by user:{hex_id} in {duration}s from {ip} ({module})")
 
             if duration > 2.5:
                 category = "slow_request"
@@ -141,16 +151,12 @@ class SyntheticDataGenerator:
                 "duration": duration
             }))
 
-        # ─── prefix every category with "log/" ──────────────────────────────
-        prefixed = []
-        for text, cat, meta in entries:
-            prefixed.append((text, f"log_{cat}", meta))
-        return prefixed[:count]
+        # prefix every category with "log_"
+        return [(text, f"log_{cat}", meta) for text, cat, meta in entries][:count]
 
     def generate_yaml_data(self, count=100):
         """
-        Returns a list of (yaml_text, subtype) tuples.
-        Subtypes include at least these 10:
+        Subtypes include:
           app_config, k8s_deployment, docker_compose,
           helm_values, ansible_playbook, prometheus_config,
           github_actions, circleci_config,
@@ -192,7 +198,7 @@ services:
       - "8080:80"
 """, "docker_compose"),
 
-            # Helm values (multi‐doc)
+            # Helm values (multi-doc)
             ("""# Default values for mychart
 ---
 replicaCount: 2
@@ -261,11 +267,9 @@ resource "aws_s3_bucket" "b" {
         ]
 
         entries = [random.choice(samples) for _ in range(count)]
+        # prefix every category with "yaml_"
+        return [(text, f"yaml_{cat}") for text, cat in entries]
 
-        # ─── prefix every category with "yaml/" ─────────────────────────────
-        prefixed = [(text, f"yaml_{cat}") for text, cat in entries]
-        return prefixed
-    
     def generate_tabular_data(self, count=100):
         """
         10 categories: csv_numeric, csv_alphanumeric, csv_mixed_types,
@@ -292,21 +296,29 @@ resource "aws_s3_bucket" "b" {
                     if "numeric" in cat:
                         rows.append([str(random.randint(0,1000)) for _ in cols])
                     elif "alphanumeric" in cat:
-                        rows.append([''.join(random.choices(string.ascii_uppercase+string.digits, k=5))
-                                     for _ in cols])
+                        rows.append([
+                            ''.join(random.choices(string.ascii_uppercase+string.digits, k=5))
+                            for _ in cols
+                        ])
                     elif "mixed_types" in cat:
                         rows.append([
-                            random.choice([str(random.randint(0,500)),
-                                           random.choice(["TRUE","FALSE","NULL"]),
-                                           ''.join(random.choices(string.ascii_lowercase, k=4))])
+                            random.choice([
+                                str(random.randint(0,500)),
+                                random.choice(["TRUE","FALSE","NULL"]),
+                                ''.join(random.choices(string.ascii_lowercase, k=4))
+                            ])
                             for _ in cols
                         ])
                     elif "sparse" in cat:
-                        rows.append([str(random.randint(0,100)) if random.random()<0.2 else ""
-                                     for _ in cols])
+                        rows.append([
+                            str(random.randint(0,100)) if random.random()<0.2 else ""
+                            for _ in cols
+                        ])
                     else:
-                        rows.append([''.join(random.choices(string.ascii_letters, k=3))
-                                     for _ in cols])
+                        rows.append([
+                            ''.join(random.choices(string.ascii_letters, k=3))
+                            for _ in cols
+                        ])
 
                 # build lines, with repeated header if needed
                 lines = []
@@ -318,9 +330,8 @@ resource "aws_s3_bucket" "b" {
 
                 entries.append(("\n".join(lines), cat))
 
-        # ─── prefix every category with "tabular/" ──────────────────────────
-        prefixed = [(text, f"tabular_{cat}") for text, cat in entries]
-        return prefixed[:count]
+        # prefix every category with "tabular_"
+        return [(text, f"tabular_{cat}") for text, cat in entries][:count]
 
 
 # ----------------------------
@@ -420,7 +431,6 @@ def save_freq_json(freq_dict, out_path):
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(freq_dict, f, ensure_ascii=True, indent=2)
 
-
 def validate_data_point(idx, item):
     if len(item) == 2:
         text, category = item
@@ -448,17 +458,9 @@ def save_json_and_text(data, algo, compressor,
     for idx, item in enumerate(data):
         text, category, metadata = validate_data_point(idx, item)
 
-        if category in {
-            "app_config", "k8s_deployment", "docker_compose",
-            "helm_values", "ansible_playbook", "prometheus_config",
-            "github_actions", "circleci_config",
-            "cloudformation", "terraform_module"
-        }:
+        if category.startswith("yaml_"):
             ext = "yaml"
-        elif category in {
-            "info", "debug", "warning", "error", "critical",
-            "slow_request", "status_check", "db_error", "auth_failure"
-        }:
+        elif category.startswith("log_"):
             ext = "log"
         else:
             ext = "txt"
@@ -559,9 +561,13 @@ def main():
         "--count", type=int, default=100,
         help="Number of examples per source"
     )
+    parser.add_argument(
+        "--seed", "-s", type=int, default=42,
+        help="Random seed for reproducibility"
+    )
     args = parser.parse_args()
 
-    gen = SyntheticDataGenerator()
+    gen = SyntheticDataGenerator(seed=args.seed)
     if args.source == "string":
         data = gen.generate_string_data(count=args.count)
     elif args.source == "log":
@@ -586,7 +592,6 @@ def main():
         save_json_and_text(data, "rle", RLECompressor)
     if "huffman" in args.algorithms:
         save_json_and_text(data, "huffman", HuffmanCompressor)
-
 
 if __name__ == "__main__":
     main()
