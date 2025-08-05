@@ -334,7 +334,7 @@ def sub_extract_last_complete_json(s):
 def extract_last_complete_json(s):
     res = sub_extract_last_complete_json(s)
     if res is None:
-        s = s.replace("\{","{").replace("\}","}").replace('(','[').replace(')',']')
+        s = s.replace("\{","{").replace("\}","}").replace('(','[').replace(')',']').replace("'", '"')
         res = sub_extract_last_complete_json(s)
     if res is None and "\\boxed{" in s:
         boxstart = s.rfind("\\boxed{")+len("\\boxed{")
@@ -342,12 +342,13 @@ def extract_last_complete_json(s):
         boxcontent = s[boxstart:boxend]
         processed_box_content = boxcontent.replace("\\\\","\\").replace("\\{","{").replace("\\}","}").replace('\\left','').replace('\\right','')
         res = sub_extract_last_complete_json(processed_box_content)
-    else:
+    if res is None:
         matches = re.findall(r'\[ANSWER\](.*?)\[/ANSWER\]', s, flags=re.DOTALL)
         if not matches:
             return None
-        return matches[-1].strip()
+        res = sub_extract_last_complete_json(matches[-1].strip())
     return res
+
 
 def strict_check_size(obj):
     # Check if object size is less than 1024 bytes

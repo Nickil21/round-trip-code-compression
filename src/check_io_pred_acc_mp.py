@@ -188,17 +188,16 @@ def check_io_pred_acc(item, algo):
 
         else:
             # lzw, rle
-            if algo == "rle":
-                if isinstance(raw_value, str):
-                    try:
-                        raw_value = ast.literal_eval(raw_value)
-                    except Exception:
-                        return _make_response(
-                            "no answer",
-                            f"Field '{used_key}' string value cannot be parsed as Python list",
-                            actual=expected,
-                            predicted="no answer"
-                        )
+            if isinstance(raw_value, str):
+                try:
+                    raw_value = ast.literal_eval(raw_value)
+                except Exception:
+                    return _make_response(
+                        "no answer",
+                        f"Field '{used_key}' string value cannot be parsed as Python list",
+                        actual=expected,
+                        predicted="no answer"
+                    )
             if not isinstance(raw_value, cfg["expected_type"]):
                 return _make_response(
                     "no answer",
@@ -366,8 +365,8 @@ def main():
             })
 
 
-        write_jsonl(batch_i, res_file_name, mode='a')
-        write_jsonl(batch_o, res_file_name, mode='a')
+        write_jsonl(batch_i, res_file_name, mode='w')
+        write_jsonl(batch_o, res_file_name, mode='w')
 
         print(f"Wrote a batch of {len(batch)} items.")
         print(f"Batch {batch_idx} status: {batchstat}")

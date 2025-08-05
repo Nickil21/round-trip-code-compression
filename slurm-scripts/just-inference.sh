@@ -20,7 +20,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 
 # ─── Pick one algorithm per array task ────────────────────────────
-ALGORITHMS=(rle lzw ae huffman)
+ALGORITHMS=(rle)
 ALG="${ALGORITHMS[$SLURM_ARRAY_TASK_ID]}"
 echo "[$SLURM_JOB_ID:$SLURM_ARRAY_TASK_ID] Running with algorithm: $ALG"
 

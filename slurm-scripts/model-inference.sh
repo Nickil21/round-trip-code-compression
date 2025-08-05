@@ -95,7 +95,7 @@ python src/build_codeio_msg.py \
   --prompt_type zero_shot
 
 # ─── INFERENCE WITH DYNAMIC TP_SIZE & MAX_LENGTH ───────────────
-TP_SIZES=(1 2 4)
+TP_SIZES=(1 2 4 8)
 INITIAL_MAX_LENGTH=32768    # start high
 MIN_MAX_LENGTH=2048        # do not go below this
 
@@ -113,6 +113,9 @@ for TP in "${TP_SIZES[@]}"; do
     LOG_FILE="${LOG_DIR}/${MODEL_TAG}_T${T}_tp${TP}_ml${ML}.log"
     echo "[$SLURM_JOB_ID] Trying tp_size=${TP}, max_length=${ML}, VLLM_USE_V1=${VLLM_USE_V1}" | tee "${LOG_FILE}"
 
+    # choose tmp or final out
+    CURRENT_OUT=${OUT_TMP:-${OUT_FILE}}
+
     singularity exec --nv \
       --bind "$(pwd)":/workspace \
       /projects/public/brics/containers/e4s/e4s-cuda90-aarch64-25.06.sif \
@@ -120,7 +123,7 @@ for TP in "${TP_SIZES[@]}"; do
         /py3.10/bin/python src/batched_api_inference.py \
           --model ${MODEL} \
           --input ${MSG_FILE} \
-          --output ${OUT_FILE} \
+          --output ${CURRENT_OUT} \
           --temperature ${T} \
           --num_completions ${NUM_COMPLETIONS} \
           --tp_size ${TP} \
@@ -151,7 +154,7 @@ for TP in "${TP_SIZES[@]}"; do
       continue
     fi
 
-    # Generic max_length error → halve ML down to MIN_MAX_LENGTH
+    # Generic max_length error → halve ML
     if grep -qi "ValueError: User-specified max_model_len" "${LOG_FILE}"; then
       if [ ${ML} -le ${MIN_MAX_LENGTH} ]; then
         echo "[$SLURM_JOB_ID] Reached min max_length=${MIN_MAX_LENGTH}; terminating" | tee -a "${LOG_FILE}"
@@ -167,6 +170,14 @@ for TP in "${TP_SIZES[@]}"; do
     exit $EXIT
   done
 done
+
+# ─── MERGE RESUMED OUTPUT ───────────────────────────────────────
+if [ -n "${OUT_TMP}" ]; then
+  echo "[$SLURM_JOB_ID] Merging ${OUT_TMP} into ${OUT_FILE}..."
+  cat "${OUT_TMP}" >> "${OUT_FILE}"
+  rm "${OUT_TMP}"
+  echo "[$SLURM_JOB_ID] Now have $(wc -l < "${OUT_FILE}")/$(wc -l < "${DATA_DIR}/codeio_1k_msg.jsonl") lines."
+fi
 
 # ─── VERIFY OUTPUT ───────────────────────────────────────────────
 python src/check_io_pred_acc_mp.py \

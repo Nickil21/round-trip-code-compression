@@ -18,6 +18,7 @@ import torch
 import time
 from tqdm import tqdm
 
+from transformers import BitsAndBytesConfig
 from vllm.sampling_params import RequestOutputKind 
 
 from helper import model_sizes, model_categories
@@ -38,19 +39,55 @@ use_openai = False
 
 
 def init_llm(model_name, temperature, max_tokens, tp_size, num_completions):
+    """
+    Try to load full-precision/bf16 first. On OOM, fall back to 4-bit NF4 quantization.
+    """
     global llm, sampling_params
-    llm = LLM(model=model_name, tensor_parallel_size=tp_size, dtype=torch.bfloat16, max_model_len=max_tokens, trust_remote_code=True)
+
     sampling_params = SamplingParams(
         temperature=temperature,
-        max_tokens=max_tokens, # zero ⇒ greedy
-        top_p=0.95,        # consider all tokens
-        # top_k=1,         # only the single highest-prob token
-        stop=["[/ANSWER]"],        # stop generation at the first closing brace
+        max_tokens=max_tokens,
+        top_p=0.95,
+        stop=["[/ANSWER]"],
         include_stop_str_in_output=True,
         n=num_completions,
-        seed=42,  # for reproducibility
-        # repetition_penalty=1.2
+        seed=42,
     )
+
+    try:
+        print(f"Loading {model_name} in bf16, TP={tp_size}")
+        llm = LLM(
+            model=model_name,
+            tensor_parallel_size=tp_size,
+            dtype=torch.bfloat16,
+            max_model_len=max_tokens,
+            trust_remote_code=True,
+        )
+    except RuntimeError as e:
+        # Detect CUDA OOM in the exception message
+        if "CUDA out of memory" in str(e).lower():
+            print("⚠️  OOM detected! Falling back to 4-bit bitsandbytes quantization.")
+            # Define a 4-bit NF4 config
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_compute_dtype=torch.float16,
+            )
+            # Retry with quantization
+            llm = LLM(
+                model=model_name,
+                tensor_parallel_size=tp_size,
+                dtype=torch.float16,           # intermediate compute in fp16
+                quantization_config=bnb_config,
+                max_model_len=max_tokens,
+                trust_remote_code=True,
+            )
+        else:
+            # Re-raise anything else
+            raise
+
+    print("✅ LLM ready:", llm)
 
 
 def format_messages(messages):
