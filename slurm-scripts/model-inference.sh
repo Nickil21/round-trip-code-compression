@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=io-pred
-#SBATCH --output=slurm-logs/io-pred.%A_%a.out
-#SBATCH --error=slurm-logs/io-pred.%A_%a.err
+#SBATCH --job-name=io-pred-inference
+#SBATCH --output=slurm-logs/io-pred-inference.%A_%a.out
+#SBATCH --error=slurm-logs/io-pred-inference.%A_%a.err
 #SBATCH --partition=workq
 #SBATCH --array=0-319%32            # 208 tasks, max 64 running at once
 #SBATCH --gres=gpu:4                # four GPUs per task
@@ -21,7 +21,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 
 # ─── GRID DEFINITION ─────────────────────────────────────────────
-ALGS=(rle lzw ae huffman)
+ALGS=(lzw ae rle huffman)
 MODELS=(
   'Qwen/Qwen2.5-7B-Instruct'
   'mistralai/Mistral-7B-Instruct-v0.3'

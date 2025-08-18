@@ -22,64 +22,224 @@ class SyntheticDataGenerator:
             for i in range(10)
         ]
 
+    # --- DNA helpers ---
+    @staticmethod
+    def _dna_rc(seq: str) -> str:
+        comp = str.maketrans("ACGTNRYWSKMBDHV", "TGCANYRWSMKVHDB")
+        return seq.translate(comp)[::-1]
+
+    @staticmethod
+    def _dna_random(length: int, alphabet="ACGT") -> str:
+        return ''.join(random.choices(alphabet, k=length))
+
+    @staticmethod
+    def _dna_snp(seq: str, num_snps: int = 3) -> str:
+        seq = list(seq)
+        if not seq:
+            return ""
+        k = min(num_snps, len(seq))
+        idxs = random.sample(range(len(seq)), k=k)
+        for i in idxs:
+            base = seq[i]
+            choices = [b for b in "ACGT" if b != base]
+            seq[i] = random.choice(choices)
+        return ''.join(seq)
+
+    def generate_dna_data(self, count=100):
+        """
+        DNA categories:
+          dna_random, dna_motif_repeat, dna_palindrome_rc, dna_orf_like,
+          dna_microsatellite, dna_snp_variants, dna_gc_clamp,
+          dna_fasta_record, dna_codon_repeat, dna_kmer_concat
+        """
+        entries, seen = [], set()
+
+        def add(text, cat):
+            if text in seen:
+                return False
+            seen.add(text)
+            entries.append((text, f"string_{cat}"))  # keep "string_" prefix family
+            return True
+
+        # 1) Random genomic-like strings
+        target = max(1, count // 10)
+        while len([c for _, c in entries if c == "string_dna_random"]) < target and len(entries) < count:
+            add(self._dna_random(random.randint(60, 200)), "dna_random")
+
+        # 2) Motif repeat (e.g., (CA)n, (ATG)n)
+        motifs = ["CA", "AT", "TG", "GATA", "ATG"]
+        while len([c for _, c in entries if c == "string_dna_motif_repeat"]) < target and len(entries) < count:
+            m = random.choice(motifs)
+            n = random.randint(8, max(8, 40 // max(1, len(m))))
+            add(m * n, "dna_motif_repeat")
+
+        # 3) Reverse-complement palindromes (restriction-site-like)
+        seeds = ["GAATTC", "AAGCTT", "GGATCC", "CCCGGG", "GGTACC"]  # EcoRI, HindIII, BamHI, SmaI, KpnI
+        while len([c for _, c in entries if c == "string_dna_palindrome_rc"]) < target and len(entries) < count:
+            left = random.choice(seeds)
+            pal = left + self._dna_rc(left)
+            add(pal, "dna_palindrome_rc")
+
+        # 4) ORF-like (start ATG ... stop TAG/TGA/TAA)
+        stops = ["TAG", "TGA", "TAA"]
+        while len([c for _, c in entries if c == "string_dna_orf_like"]) < target and len(entries) < count:
+            codon_count = random.randint(20, 60)
+            middle = ''.join(random.choice([
+                "AAA","GCT","GCC","GCA","GCG","GTT","GTC","GTA","GTG",
+                "TCT","TCC","TCA","TCG","GAA","GAG","CCT","CCA","CCG","CGA","CGG"
+            ]) for _ in range(codon_count))
+            seq = "ATG" + middle + random.choice(stops)
+            if len(seq) % 3 == 0:
+                add(seq, "dna_orf_like")
+
+        # 5) Microsatellites with flanks
+        micro_motifs = ["CA", "GA", "TTC", "AAT", "GAA"]
+        while len([c for _, c in entries if c == "string_dna_microsatellite"]) < target and len(entries) < count:
+            flankL = self._dna_random(20)
+            core = random.choice(micro_motifs) * random.randint(6, 20)
+            flankR = self._dna_random(20)
+            add(flankL + core + flankR, "dna_microsatellite")
+
+        # 6) SNP variant sets (baseline + a few mutated versions)
+        while len([c for _, c in entries if c == "string_dna_snp_variants"]) < target and len(entries) < count:
+            base = self._dna_random(120)
+            variants = [self._dna_snp(base, n) for n in (1, 2, 3)]
+            for v in [base] + variants:
+                if len(entries) >= count:
+                    break
+                add(v, "dna_snp_variants")
+
+        # 7) GC clamp (high-GC ends)
+        while len([c for _, c in entries if c == "string_dna_gc_clamp"]) < target and len(entries) < count:
+            core = self._dna_random(60)
+            clamp_L = "G" * random.randint(6, 14) + self._dna_random(10, "GC")
+            clamp_R = self._dna_random(10, "GC") + "C" * random.randint(6, 14)
+            add(clamp_L + core + clamp_R, "dna_gc_clamp")
+
+        # 8) FASTA-like record (single record, header + sequence lines)
+        idx = 0
+        while len([c for _, c in entries if c == "string_dna_fasta_record"]) < target and len(entries) < count:
+            seq = self._dna_random(random.randint(120, 300))
+            wrapped = "\n".join([seq[i:i+60] for i in range(0, len(seq), 60)])
+            rec = f">seq_{idx}\n{wrapped}"
+            idx += 1
+            add(rec, "dna_fasta_record")
+
+        # 9) Codon repeats (e.g., ATG repeated)
+        codons = ["ATG", "GAA", "GCT", "TTT", "TGG", "CGA"]
+        while len([c for _, c in entries if c == "string_dna_codon_repeat"]) < target and len(entries) < count:
+            cod = random.choice(codons)
+            add(cod * random.randint(20, 120), "dna_codon_repeat")
+
+        # 10) k-mer concatenations
+        while len([c for _, c in entries if c == "string_dna_kmer_concat"]) < target and len(entries) < count:
+            k = random.choice([3, 4, 5, 6])
+            kmers = {self._dna_random(k) for _ in range(random.randint(10, 50))}
+            add(''.join(kmers), "dna_kmer_concat")
+
+        # Top up uniquely if needed
+        while len(entries) < count:
+            add(self._dna_random(150), "dna_random")
+
+        return entries
+
     def generate_string_data(self, count=100):
         entries = []
-        # 14 categories (≥10)
-        for _ in range(count // 14):
-            char = random.choice(string.ascii_uppercase)
-            entries.append((char * random.randint(5, 30), "char_repeat"))
+        seen = set()
 
+        def add(text, cat):
+            if text not in seen:
+                seen.add(text)
+                entries.append((text, f"string_{cat}"))
+                return True
+            return False
+
+        # 14+ categories (uniqueness-guarded)
+        produced = 0
+        # 1) repeated chars
+        while produced < count // 14 and produced < count:
+            char = random.choice(string.ascii_uppercase)
+            text = char * random.randint(5, 30)
+            if add(text, "char_repeat"):
+                produced += 1
+
+        # 2) alternating_pattern
         for size in range(2, 7):
+            if len(entries) >= count:
+                break
             pattern = ''.join(string.ascii_uppercase[:size])
             repeat = random.randint(3, 10)
-            entries.append(((pattern * repeat)[:random.randint(size * 3, size * 10)],
-                            "alternating_pattern"))
+            text = (pattern * repeat)[:random.randint(size * 3, size * 10)]
+            add(text, "alternating_pattern")
 
+        # 3) block_repeat
         for size in range(3, 9):
+            if len(entries) >= count:
+                break
             block = ''.join(random.choices(string.ascii_uppercase, k=size))
-            entries.append((block * random.randint(2, 8), "block_repeat"))
+            add(block * random.randint(2, 8), "block_repeat")
 
-        for _ in range(count // 14):
+        # 4) nested_repeat
+        produced = 0
+        while produced < count // 14 and len(entries) < count:
             base3 = ''.join(random.choices(string.ascii_uppercase, k=3))
             nested = base3 + base3[::-1] + base3
-            entries.append((nested * random.randint(2, 5), "nested_repeat"))
+            if add(nested * random.randint(2, 5), "nested_repeat"):
+                produced += 1
 
-        for _ in range(count // 14):
+        # 5) palindrome
+        produced = 0
+        while produced < count // 14 and len(entries) < count:
             half = ''.join(random.choices(string.ascii_uppercase, k=5))
-            entries.append((half + half[::-1], "palindrome"))
+            if add(half + half[::-1], "palindrome"):
+                produced += 1
 
-        for _ in range(count // 14):
+        # 6) near_palindrome
+        produced = 0
+        while produced < count // 14 and len(entries) < count:
             s = ''.join(random.choices(string.ascii_uppercase, k=11))
             mid = random.randint(0, len(s)-1)
-            entries.append((s[:mid] + s[mid] + s[:mid][::-1], "near_palindrome"))
+            if add(s[:mid] + s[mid] + s[:mid][::-1], "near_palindrome"):
+                produced += 1
 
+        # 7) pangram (only once; no duplicate)
         pangram = "THE_QUICK_BROWN_FOX_JUMPS_OVER_THE_LAZY_DOG"
-        entries.append((pangram, "pangram"))
-        entries.append((pangram * 2, "pangram"))
+        add(pangram, "pangram")
 
-        for _ in range(count // 14):
-            entries.append((' '.join(random.sample(pangram.split('_'), 5)),
-                            "pangram_mixed"))
+        # 8) pangram_mixed
+        produced = 0
+        tokens = pangram.split('_')
+        while produced < count // 14 and len(entries) < count:
+            text = ' '.join(random.sample(tokens, 5))
+            if add(text, "pangram_mixed"):
+                produced += 1
 
+        # 9) keyboard + reversed (distinct)
         row = "QWERTYUIOP"
-        entries.append((row, "keyboard"))
-        entries.append((row[::-1], "keyboard"))
+        add(row, "keyboard")
+        add(row[::-1], "keyboard")
 
-        for _ in range(count // 14):
+        # 10) keyboard_repeat
+        produced = 0
+        while produced < count // 14 and len(entries) < count:
             start = random.randint(0, len(row)-5)
-            end = random.randint(5, len(row))
+            end = random.randint(start+5, len(row))
             chunk = row[start:end]
-            entries.append((chunk * random.randint(2, 6), "keyboard_repeat"))
+            if add(chunk * random.randint(2, 6), "keyboard_repeat"):
+                produced += 1
 
-        for _ in range(count // 14):
+        # 11) pseudo_random
+        produced = 0
+        while produced < count // 14 and len(entries) < count:
             base4 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-            s = ''.join(random.choices(string.ascii_uppercase + string.digits,
-                                       k=random.randint(5, 15)))
+            s = ''.join(random.choices(string.ascii_uppercase + string.digits, k=random.randint(5, 15)))
             for _ in range(3):
                 i = random.randint(0, len(s))
                 s = s[:i] + base4 + s[i:]
-            entries.append((s, "pseudo_random"))
+            if add(s, "pseudo_random"):
+                produced += 1
 
+        # 12) natural language + repeats (kept distinct)
         sentences = [
             "compression is the transformation of data to reduce its size",
             "lossless algorithms preserve every bit of the original data",
@@ -88,17 +248,28 @@ class SyntheticDataGenerator:
             "huffman coding builds optimal prefix trees based on frequencies"
         ]
         for s in sentences:
-            entries.append((s, "natural_language"))
-            entries.append((s + " " + s, "natural_language_repeat"))
+            if len(entries) >= count:
+                break
+            add(s, "natural_language")
+            if len(entries) >= count:
+                break
+            add(s + " " + s, "natural_language_repeat")
 
-        for _ in range(count // 14):
+        # 13) random with motif
+        produced = 0
+        while produced < count // 14 and len(entries) < count:
             s = ''.join(chr(random.randint(32, 126)) for _ in range(100))
             motif = ''.join(random.choices(string.ascii_lowercase, k=5))
             idx = random.randint(0, 95)
-            entries.append((s[:idx] + motif + s[idx:], "random_motif"))
+            if add(s[:idx] + motif + s[idx:], "random_motif"):
+                produced += 1
 
-        # prefix every category with "string_"
-        return [(text, f"string_{cat}") for text, cat in entries][:count]
+        # Top up to exact 'count' with unique alphanum strings if needed
+        while len(entries) < count:
+            text = ''.join(random.choices(string.ascii_letters + string.digits, k=24))
+            add(text, "filler_unique")
+
+        return entries
 
     def generate_log_data(self, count=100):
         """
@@ -108,13 +279,14 @@ class SyntheticDataGenerator:
           info, debug, warning, error, critical
         """
         entries = []
+        seen = set()
         levels    = ["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"]
         endpoints = ["/api/v1/user", "/api/v1/order", "/status",
                      "/metrics", "/auth/login", "/home"]
         modules   = ["auth", "server", "db", "cache", "worker"]
         methods   = ["GET", "POST", "PUT", "DELETE"]
 
-        for _ in range(count):
+        def make_one():
             ts       = random.choice(self.timestamps)
             level    = random.choice(levels)
             endpoint = random.choice(endpoints)
@@ -144,15 +316,22 @@ class SyntheticDataGenerator:
             else:
                 category = level.lower()
 
-            entries.append((msg, category, {
+            meta = {
                 "method":   method,
                 "endpoint": endpoint,
                 "module":   module,
                 "duration": duration
-            }))
+            }
+            return msg, category, meta
 
-        # prefix every category with "log_"
-        return [(text, f"log_{cat}", meta) for text, cat, meta in entries][:count]
+        while len(entries) < count:
+            msg, category, meta = make_one()
+            if msg in seen:
+                continue
+            seen.add(msg)
+            entries.append((msg, f"log_{category}", meta))
+
+        return entries
 
     def generate_yaml_data(self, count=100):
         """
@@ -266,9 +445,43 @@ resource "aws_s3_bucket" "b" {
 """, "terraform_module"),
         ]
 
-        entries = [random.choice(samples) for _ in range(count)]
-        # prefix every category with "yaml_"
-        return [(text, f"yaml_{cat}") for text, cat in entries]
+        def mutate(i, text, cat):
+            # produce a minimally changed but valid variant based on index
+            if cat == "app_config":
+                return text.replace("MyService", f"MyService{i}").replace("1.2.3", f"1.2.{(i%9)+1}")
+            if cat == "k8s_deployment":
+                return text.replace("web-app", f"web-app-{i}").replace("replicas: 3", f"replicas: {(i%5)+1}")
+            if cat == "docker_compose":
+                return text.replace('"8080:80"', f'"{8080 + i}:80"')
+            if cat == "helm_values":
+                return text.replace("replicaCount: 2", f"replicaCount: {(i%4)+1}").replace("stable", f"stable-{i%3}")
+            if cat == "ansible_playbook":
+                return text.replace("git", f"git{i%3}").replace("present", "latest" if i%2 else "present")
+            if cat == "prometheus_config":
+                return text.replace("localhost:9100", f"localhost:{9100 + (i%10)}")
+            if cat == "github_actions":
+                return text.replace("@v2", f"@v{2 + (i%3)}")
+            if cat == "circleci_config":
+                return text.replace("3.9", f"3.{9 - (i%3)}")
+            if cat == "cloudformation":
+                return text.replace("my-unique-bucket", f"my-unique-bucket-{i}")
+            if cat == "terraform_module":
+                return text.replace("my-tf-bucket", f"my-tf-bucket-{i}")
+            return text
+
+        seen = set()
+        entries = []
+        i = 0
+        while len(entries) < count:
+            base_text, cat = samples[i % len(samples)]
+            variant = mutate(len(entries), base_text, cat)
+            if variant in seen:
+                i += 1
+                continue
+            seen.add(variant)
+            entries.append((variant, f"yaml_{cat}"))
+            i += 1
+        return entries
 
     def generate_tabular_data(self, count=100):
         """
@@ -283,55 +496,73 @@ resource "aws_s3_bucket" "b" {
             "tsv_numeric", "tsv_alphanumeric", "tsv_mixed_types",
             "tsv_repeated_header", "tsv_sparse"
         ]
-        entries = []
-        per_cat = max(1, count // len(categories))
 
-        for cat in categories:
+        def one_table(cat):
             is_csv = cat.startswith("csv")
             sep    = "," if is_csv else "\t"
-            for _ in range(per_cat):
-                cols = [f"col{i}" for i in range(1,6)]
-                rows = []
-                for __ in range(5):
-                    if "numeric" in cat:
-                        rows.append([str(random.randint(0,1000)) for _ in cols])
-                    elif "alphanumeric" in cat:
-                        rows.append([
-                            ''.join(random.choices(string.ascii_uppercase+string.digits, k=5))
-                            for _ in cols
+            cols = [f"col{i}" for i in range(1,6)]
+            rows = []
+            for _ in range(5):
+                if "numeric" in cat:
+                    rows.append([str(random.randint(0,1000)) for _ in cols])
+                elif "alphanumeric" in cat:
+                    rows.append([
+                        ''.join(random.choices(string.ascii_uppercase+string.digits, k=5))
+                        for _ in cols
+                    ])
+                elif "mixed_types" in cat:
+                    rows.append([
+                        random.choice([
+                            str(random.randint(0,500)),
+                            random.choice(["TRUE","FALSE","NULL"]),
+                            ''.join(random.choices(string.ascii_lowercase, k=4))
                         ])
-                    elif "mixed_types" in cat:
-                        rows.append([
-                            random.choice([
-                                str(random.randint(0,500)),
-                                random.choice(["TRUE","FALSE","NULL"]),
-                                ''.join(random.choices(string.ascii_lowercase, k=4))
-                            ])
-                            for _ in cols
-                        ])
-                    elif "sparse" in cat:
-                        rows.append([
-                            str(random.randint(0,100)) if random.random()<0.2 else ""
-                            for _ in cols
-                        ])
-                    else:
-                        rows.append([
-                            ''.join(random.choices(string.ascii_letters, k=3))
-                            for _ in cols
-                        ])
+                        for _ in cols
+                    ])
+                elif "sparse" in cat:
+                    rows.append([
+                        str(random.randint(0,100)) if random.random()<0.2 else ""
+                        for _ in cols
+                    ])
+                else:
+                    rows.append([
+                        ''.join(random.choices(string.ascii_letters, k=3))
+                        for _ in cols
+                    ])
 
-                # build lines, with repeated header if needed
-                lines = []
-                header_count = 2 if "repeated_header" in cat else 1
-                for __ in range(header_count):
-                    lines.append(sep.join(cols))
-                for r in rows:
-                    lines.append(sep.join(r))
+            # build lines, with repeated header if needed
+            lines = []
+            header_count = 2 if "repeated_header" in cat else 1
+            for __ in range(header_count):
+                lines.append(sep.join(cols))
+            for r in rows:
+                lines.append(sep.join(r))
 
-                entries.append(("\n".join(lines), cat))
+            return "\n".join(lines)
 
-        # prefix every category with "tabular_"
-        return [(text, f"tabular_{cat}") for text, cat in entries][:count]
+        per_cat = max(1, count // len(categories))
+        entries = []
+        seen = set()
+
+        for cat in categories:
+            while sum(1 for _, c in entries if c == f"tabular_{cat}") < per_cat and len(entries) < count:
+                t = one_table(cat)
+                if t in seen:  # regenerate until unique
+                    continue
+                seen.add(t)
+                entries.append((t, f"tabular_{cat}"))
+
+        # Top up to exact count (unique) if rounding left us short
+        i = 0
+        while len(entries) < count:
+            cat = categories[i % len(categories)]
+            t = one_table(cat)
+            if t not in seen:
+                seen.add(t)
+                entries.append((t, f"tabular_{cat}"))
+            i += 1
+
+        return entries
 
 
 # ----------------------------
@@ -399,6 +630,8 @@ class HuffmanCompressor:
     def compress(data: str):
         from collections import namedtuple
         import heapq
+        if not data:
+            return [], {}, 0
         freq = Counter(data)
         Node = namedtuple("Node", ["freq", "symbol", "left", "right"])
         Node.__lt__ = lambda a, b: a.freq < b.freq
@@ -442,6 +675,18 @@ def validate_data_point(idx, item):
     if not category or not isinstance(category, str):
         raise ValueError(f"[{idx}] Bad category: {category!r}")
     return text, category, metadata
+
+def enforce_unique_texts(data):
+    """Ensure uniqueness across combined sources, keeping first occurrence."""
+    seen = set()
+    unique = []
+    for item in data:
+        text = item[0]
+        if text in seen:
+            continue
+        seen.add(text)
+        unique.append(item)
+    return unique
 
 # ----------------------------
 # SAVE TO FILES
@@ -553,7 +798,7 @@ def main():
     )
     parser.add_argument(
         "--source",
-        choices=["string", "log", "yaml", "mixed"],
+        choices=["string", "log", "yaml", "csv", "dna", "mixed"],
         default="mixed",
         help="Type of input data"
     )
@@ -576,13 +821,19 @@ def main():
         data = gen.generate_yaml_data(count=args.count)
     elif args.source == "csv":
         data = gen.generate_tabular_data(count=args.count)
+    elif args.source == "dna":
+        data = gen.generate_dna_data(count=args.count)
     else:
         data = (
             gen.generate_string_data(count=args.count) +
             gen.generate_log_data(count=args.count) +
             gen.generate_yaml_data(count=args.count) +
-            gen.generate_tabular_data(count=args.count)
+            gen.generate_tabular_data(count=args.count) +
+            gen.generate_dna_data(count=args.count)
         )
+
+    # final guard: ensure distinct inputs across the combined set
+    data = enforce_unique_texts(data)
 
     if "lzw" in args.algorithms:
         save_json_and_text(data, "lzw", LZWCompressor)

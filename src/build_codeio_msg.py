@@ -1,7 +1,7 @@
 from utils import *
 from tqdm import tqdm
 # from codeio_utils import *
-from prompts import input_exec_pred_template, output_exec_pred_template, input_exec_pred_template_inversion, output_exec_pred_template_inversion
+from prompts import INPUT_PRED_TEMPLATE, INPUT_PRED_TEMPLATE_INV_EXTRA, OUTPUT_PRED_TEMPLATE, OUTPUT_PRED_TEMPLATE_INV_EXTRA
 from utils import get_freq_dict
 
 
@@ -9,9 +9,9 @@ def build_io_pred(problem_statement, io_req, refcode, inputx, outputx, prompt_ty
 
     if prompt_type == "zero_shot":
         if inversion:
-            template = input_exec_pred_template_inversion if io=="i" else output_exec_pred_template_inversion
+            template = INPUT_PRED_TEMPLATE_INV_EXTRA if io=="i" else OUTPUT_PRED_TEMPLATE_INV_EXTRA
         else:
-            template = input_exec_pred_template if io=="i" else output_exec_pred_template
+            template = INPUT_PRED_TEMPLATE if io=="i" else OUTPUT_PRED_TEMPLATE
 
     # elif prompt_type == "one_shot":
     #     template = input_exec_pred_template + "\n\n" + few_shot_template_input if io=="i" else output_exec_pred_template + "\n\n" + few_shot_template_output
@@ -114,12 +114,6 @@ if __name__=="__main__":
                     "Output:\n  `return` (str): The original input string before compression."
                 )
 
-                io_req_decoding_inversion = (
-                    "Input:\n  `uncompressed` (str): The original input string before compression.\n\n"
-                    "Output:\n  `return` (list of int): A list of integers representing "
-                    "the compressed form of the input string using LZW encoding."
-                )
-
             elif args.algorithm == "ae":
                 freq = get_freq_dict(ioid=ioid, algo="ae")  # you must provide ioid externally
                 encoding_fn = (
@@ -180,12 +174,6 @@ if __name__=="__main__":
                     "Output:\n  `return` (str): The original input string before compression."
                 )
 
-                io_req_decoding_inversion = (
-                    "Input:\n  `uncompressed` (str): The original input string before compression.\n\n"
-                    "Output:\n  `return` (float): A probability value representing the "
-                    "compressed form of the input string using Arithmetic Encoding."
-                )
-
             elif args.algorithm == "rle":
                 encoding_fn = (
                     "def main_solution(uncompressed):\n"
@@ -222,11 +210,6 @@ if __name__=="__main__":
                 io_req_decoding = (
                     "Input:\n  `compressed` (list of tuple): A list of (char, count) tuples from the RLE compression.\n\n"
                     "Output:\n  `return` (str): The original uncompressed string."
-                )
-
-                io_req_decoding_inversion = (
-                    "Input:\n  `uncompressed` (str): The original uncompressed string.\n\n"
-                    "Output:\n  `return` (list of tuple): A list of (char, count) tuples from the RLE compression."
                 )
 
             elif args.algorithm == "huffman":
@@ -301,10 +284,6 @@ Input:
 Output:
   `return` (str): The original uncompressed string.
 """
-                io_req_decoding_inversion = (
-                    "Input:\n  `uncompressed` (str): The original uncompressed string.\n\n"
-                    "Output:\n  `return` (tuple): The tuple (encoded_bytes, codebook, padding)."
-                )
 
             else:
                 raise ValueError(f"Unsupported algorithm: {args.algorithm}")
@@ -314,12 +293,12 @@ Output:
                          "output_execution_prediction_with_inversion", "input_execution_prediction_with_inversion"]):
 
                 # Select correct function and IO description based on the task
-                if task in ["output_execution_prediction", "input_execution_prediction", "input_execution_prediction_with_inversion"]:
+                if task in ["output_execution_prediction", "output_execution_prediction_with_inversion"]:
                     refcode = encoding_fn
                     io_req = io_req_encoding
-                elif task in ["output_execution_prediction_with_inversion"]:
+                elif task in ["input_execution_prediction", "input_execution_prediction_with_inversion"]:
                     refcode = decoding_fn
-                    io_req = io_req_decoding_inversion
+                    io_req = io_req_decoding
                 else:
                     raise ValueError(f"Unknown task type: {args.task}")
             

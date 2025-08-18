@@ -291,63 +291,221 @@ def diy_check_input_output():
 diy_check_input_output()
 """
 
-def sub_extract_last_complete_json(s):
-    if '```json' not in s:
-        # Stack to keep track of opening and closing braces
-        stack = []
-        last_json_start = None
-        last_json_str = None
-        
-        for i, char in enumerate(s):
-            if char == '{':
-                stack.append(i)
-                if last_json_start is None:
-                    last_json_start = i
-            elif char == '}':
-                if stack:
-                    start = stack.pop()
-                    if not stack:
-                        # Complete JSON object found
-                        last_json_str = s[last_json_start:i+1]
-                        last_json_start = None
-    else:
-        # find the last ```json
-        last_json_start = s.rfind('```json')
-        last_json_end = s.find('```', last_json_start+len('```json'))
-        last_json_str = s[last_json_start+7:last_json_end].strip()
+import re, json, ast
 
-    # Load the last JSON object
+# ---------- precompiled regexes ----------
+_FENCE_RE  = re.compile(r"```(?:json|javascript|js|py|python)?\s*(.*?)```",
+                        re.DOTALL | re.IGNORECASE)
+_TAG_RE    = re.compile(r"\[/?(?:ANSWER|THOUGHT)\]", re.IGNORECASE)
+_TRAIL_COM = re.compile(r",\s*([}\]])")  # remove trailing commas
 
-    if last_json_str:
+# ---------- helpers ----------
+def _strip_wrappers(s: str) -> str:
+    return _TAG_RE.sub("", s or "").strip()
+
+def _last_fenced_block(s: str):
+    blocks = _FENCE_RE.findall(s or "")
+    return blocks[-1].strip() if blocks else None
+
+def _collapse_double_braces(s: str) -> str:
+    m = re.match(r"^\s*\{\{(.*)\}\}\s*$", s or "", re.DOTALL)
+    return m.group(1) if m else s
+
+def _repair_json_like(s: str) -> str:
+    if not s:
+        return s
+    # smart quotes → regular
+    s = s.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'")
+    # Python booleans/None → JSON
+    s = s.replace(": None", ": null").replace(" None", " null")
+    s = s.replace(": True", ": true").replace(" True", " true")
+    s = s.replace(": False", ": false").replace(" False", " false")
+    # trailing commas before } or ]
+    s = _TRAIL_COM.sub(r"\1", s)
+    return s
+
+def _json_load_best_effort(snippet: str):
+    # 1) raw JSON
+    try:
+        return json.loads(snippet)
+    except Exception:
+        pass
+    # 2) repaired JSON
+    try:
+        return json.loads(_repair_json_like(snippet))
+    except Exception:
+        pass
+    # 3) Python literal → JSON types
+    try:
+        lit = ast.literal_eval(snippet)
+        return json.loads(json.dumps(lit))
+    except Exception:
+        return None
+
+def _maybe_unescape_entire_string(s: str) -> str:
+    """
+    If s itself is a JSON/Python string literal containing JSON, unescape once.
+    Handles cases like: "\"{\\\"output\\\": ...}\""  or  '{\"output\": ...}'
+    """
+    t = s.strip()
+    if len(t) >= 2 and ((t[0] == '"' and t[-1] == '"') or (t[0] == "'" and t[-1] == "'")):
+        # Try JSON string first, then Python string
         try:
-            return json.loads(last_json_str.replace("\n", ""))
-        except json.JSONDecodeError:
-            # replace 'False', 'True' to 'false', 'true'
-            last_json_str = last_json_str.replace("False", "false").replace("True", "true").replace("None", "null")
+            return json.loads(t)
+        except Exception:
             try:
-                return json.loads(last_json_str.replace("\n", ""))
-            except json.JSONDecodeError:
-                pass
-    return None
+                return ast.literal_eval(t)
+            except Exception:
+                return s
+    return s
 
+def _last_balanced_span_quote_aware(s: str):
+    """
+    Find the last balanced top-level {...} or [...] while **ignoring braces inside strings**.
+    Returns (start, end) or None. end is exclusive.
+    """
+    stack = []
+    last_span = None
+    top_start = None
+    in_str = False
+    str_ch = None
+    esc = False
 
-def extract_last_complete_json(s):
+    for i, ch in enumerate(s):
+        if in_str:
+            if esc:
+                esc = False
+                continue
+            if ch == '\\':
+                esc = True
+                continue
+            if ch == str_ch:
+                in_str = False
+                str_ch = None
+            continue
+
+        # not inside string
+        if ch == '"' or ch == "'":
+            in_str = True
+            str_ch = ch
+            continue
+
+        if ch == '{' or ch == '[':
+            if not stack:
+                top_start = i
+            stack.append(ch)
+        elif ch == '}' or ch == ']':
+            if stack:
+                open_ch = stack.pop()
+                if (open_ch == '{' and ch == '}') or (open_ch == '[' and ch == ']'):
+                    if not stack and top_start is not None:
+                        last_span = (top_start, i + 1)
+                        top_start = None
+    return last_span
+
+# ---------- DROP-IN FUNCTIONS ----------
+def sub_extract_last_complete_json(s: str):
+    """
+    Extract the *last* complete JSON/JSON-like object from s.
+    Prefers the last fenced block if present; otherwise scans the whole text.
+    Returns a Python object or None.
+    """
+    if not s:
+        return None
+
+    # If the entire thing is a quoted string, unescape once
+    s = _maybe_unescape_entire_string(s)
+
+    # Prefer the last fenced code block
+    block = _last_fenced_block(s)
+    if block:
+        block = _collapse_double_braces(block)
+        # If fenced block is itself a quoted string, unescape
+        block = _maybe_unescape_entire_string(block)
+        obj = _json_load_best_effort(block)
+        if obj is not None:
+            return obj
+        # fall through if fenced content didn’t parse
+
+    # Scan whole text for last balanced top-level {...} or [...]
+    span = _last_balanced_span_quote_aware(s)
+    if not span:
+        return None
+
+    start, end = span
+    snippet = _collapse_double_braces(s[start:end]).strip()
+    if not snippet:
+        return None
+
+    # If snippet is quoted (e.g., "...{...}..."), try unescape first
+    snippet = _maybe_unescape_entire_string(snippet)
+
+    return _json_load_best_effort(snippet)
+
+def extract_last_complete_json(s: str):
+    """
+    Wrapper with inexpensive normalizations and targeted fallbacks.
+    Order:
+      1) direct extraction
+      2) strip [ANSWER]/[THOUGHT] wrappers
+      3) light tuple/quote/escape normalization
+      4) LaTeX \\boxed{...} region
+      5) last [ANSWER] block content only
+    """
+    if not s:
+        return None
+
+    # 1) Direct
     res = sub_extract_last_complete_json(s)
-    if res is None:
-        s = s.replace("\{","{").replace("\}","}").replace('(','[').replace(')',']').replace("'", '"')
-        res = sub_extract_last_complete_json(s)
-    if res is None and "\\boxed{" in s:
-        boxstart = s.rfind("\\boxed{")+len("\\boxed{")
-        boxend = s.rfind("}",boxstart)
-        boxcontent = s[boxstart:boxend]
-        processed_box_content = boxcontent.replace("\\\\","\\").replace("\\{","{").replace("\\}","}").replace('\\left','').replace('\\right','')
-        res = sub_extract_last_complete_json(processed_box_content)
-    if res is None:
-        matches = re.findall(r'\[ANSWER\](.*?)\[/ANSWER\]', s, flags=re.DOTALL)
-        if not matches:
-            return None
-        res = sub_extract_last_complete_json(matches[-1].strip())
-    return res
+    if res is not None:
+        return res
+
+    # 2) Strip wrappers and try again
+    s2 = _strip_wrappers(s)
+    if s2 and s2 is not s:
+        res = sub_extract_last_complete_json(s2)
+        if res is not None:
+            return res
+
+    # 3) Light normalization
+    s3 = s2
+    changed = False
+    if "\\{" in s3 or "\\}" in s3:
+        s3 = s3.replace("\\{", "{").replace("\\}", "}")
+        changed = True
+    if "(" in s3 or ")" in s3:
+        s3 = s3.replace("(", "[").replace(")", "]")
+        changed = True
+    if "'" in s3:
+        s3 = s3.replace("'", '"')
+        changed = True
+    if changed:
+        res = sub_extract_last_complete_json(s3)
+        if res is not None:
+            return res
+
+    # 4) LaTeX \boxed{...} (take the last one)
+    key = "\\boxed{"
+    if key in s:
+        start = s.rfind(key) + len(key)
+        end = s.rfind("}", start)
+        if end > start:
+            box = s[start:end]
+            if "\\\\" in box: box = box.replace("\\\\", "\\")
+            if "\\{" in box or "\\}" in box:
+                box = box.replace("\\{", "{").replace("\\}", "}")
+            if "\\left" in box or "\\right" in box:
+                box = box.replace("\\left", "").replace("\\right", "")
+            res = sub_extract_last_complete_json(box)
+            if res is not None:
+                return res
+
+    # 5) Last [ANSWER] block content only
+    m = re.findall(r'\[ANSWER\](.*?)\[/ANSWER\]', s, flags=re.DOTALL | re.IGNORECASE)
+    if m:
+        return sub_extract_last_complete_json(m[-1].strip())
+
+    return None
 
 
 def strict_check_size(obj):
