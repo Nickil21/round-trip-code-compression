@@ -1,89 +1,157 @@
-# jq -s '.' processed_datasets/rle/training_data_sft.jsonl > processed_datasets/rle/training_data_sft.json
-
 #!/usr/bin/env bash
+#SBATCH --job-name=io-pred-inference-qwq32b-ft
+#SBATCH --output=slurm-logs/io-pred-inference-qwq32b-ft.%A_%a.out
+#SBATCH --error=slurm-logs/io-pred-inference-qwq32b-ft.%A_%a.err
+#SBATCH --partition=workq
+#SBATCH --array=0-7%8            # 4 algs × 2 temps
+#SBATCH --gres=gpu:4
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=128G
+#SBATCH --time=1-00:00:00
+
+
+# FIRST RUN THIS TO FINETUNE THE MODEL:
+# ./LLaMA-Factory/bash-scripts/finetune.sh
+
 set -euo pipefail
 
-# 1) Base model
-MODEL_NAME="01-ai/Yi-Coder-9B-Chat"
-TRUST_REMOTE_CODE=true
+#–– Which GPU did I get?
+nvidia-smi --list-gpus || true
 
-# 2) Method / fine-tuning setup
-STAGE="sft"
-DO_TRAIN=true
-FINETUNING_TYPE="lora"
-LORA_RANK=8
-LORA_TARGET="all"
+# Where the finetuned model lives (merged export root)
+FINETUNE_ROOT="${FINETUNE_ROOT:-LLaMA-Factory/finetune}"
 
-# 3) Dataset
-DATASET="rle_trace"
-TEMPLATE="yi"
-CUTOFF_LEN=2048
-MAX_SAMPLES=1000
-OVERWRITE_CACHE=true
-PREPROCESS_WORKERS=16
-DATALOADER_WORKERS=4
+# ─── ENV SETUP ───────────────────────────────────────────────────
+source ~/miniforge3/bin/activate
+conda activate round-trip-myenv \
+  || (conda create -y -n round-trip-myenv python=3.10 && conda activate round-trip-myenv)
 
-# 4) Output & logging
-OUTPUT_DIR="finetune/rle/Yi-Coder-9B-Chat/lora/sft"
-LOGGING_STEPS=10
-SAVE_STEPS=500
-PLOT_LOSS=true
-OVERWRITE_OUTPUT_DIR=true
-SAVE_ONLY_MODEL=false
-REPORT_TO="none"    # [none, wandb, tensorboard, swanlab, mlflow]
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 
-# 5) Training hyperparams
-BATCH_SIZE=1
-GRAD_ACCUM=8
-LR=1.0e-4
-EPOCHS=3.0
-SCHEDULER="cosine"
-WARMUP_RATIO=0.1
-FP16=true
-DDP_TIMEOUT=180000000
-RESUME_CHECKPOINT="null"
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
 
-# 6) (Optional) Eval settings are commented out – uncomment to enable
-# EVAL_DATASET="alpaca_en_demo"
-# VAL_SIZE=0.1
-# EVAL_BATCH=1
-# EVAL_STRATEGY="steps"
-# EVAL_STEPS=500
+# ─── GRID: algorithms & temperatures ─────────────────────────────
+ALGS=(lzw ae rle huffman)
+TEMPS=(0.2 0.8)
+NUM_COMPLETIONS=5
 
-# Launch the fine-tune
-llamafactory-cli train \
-  --model_name_or_path ${MODEL_NAME} \
-  --trust_remote_code ${TRUST_REMOTE_CODE} \
-  --stage ${STAGE} \
-  --do_train ${DO_TRAIN} \
-  --finetuning_type ${FINETUNING_TYPE} \
-  --lora_rank ${LORA_RANK} \
-  --lora_target ${LORA_TARGET} \
-  --dataset ${DATASET} \
-  --template ${TEMPLATE} \
-  --cutoff_len ${CUTOFF_LEN} \
-  --max_samples ${MAX_SAMPLES} \
-  --overwrite_cache ${OVERWRITE_CACHE} \
-  --preprocessing_num_workers ${PREPROCESS_WORKERS} \
-  --dataloader_num_workers ${DATALOADER_WORKERS} \
-  --output_dir ${OUTPUT_DIR} \
-  --logging_steps ${LOGGING_STEPS} \
-  --save_steps ${SAVE_STEPS} \
-  --plot_loss ${PLOT_LOSS} \
-  --overwrite_output_dir ${OVERWRITE_OUTPUT_DIR} \
-  --save_only_model ${SAVE_ONLY_MODEL} \
-  --report_to ${REPORT_TO} \
-  --per_device_train_batch_size ${BATCH_SIZE} \
-  --gradient_accumulation_steps ${GRAD_ACCUM} \
-  --learning_rate ${LR} \
-  --num_train_epochs ${EPOCHS} \
-  --lr_scheduler_type ${SCHEDULER} \
-  --warmup_ratio ${WARMUP_RATIO} \
-  --fp16 ${FP16} \
-  --ddp_timeout ${DDP_TIMEOUT} \
-  --resume_from_checkpoint ${RESUME_CHECKPOINT}
-  # --eval_dataset ${EVAL_DATASET} \
-  # --val_size ${VAL_SIZE} \
-  # --per_device_eval_batch_size ${EVAL_BATCH} \
-  # --eval_strategy ${EVAL_STRATEGY} \
-  # --eval_steps ${EVAL_STEPS}
+# ─── MAP ARRAY ID → (ALG, TEMP) ─────────────────────────────────
+IDX=${SLURM_ARRAY_TASK_ID}
+ALG_IDX=$(( IDX / ${#TEMPS[@]} ))
+TEMP_IDX=$(( IDX % ${#TEMPS[@]} ))
+ALG=${ALGS[$ALG_IDX]}
+T=${TEMPS[$TEMP_IDX]}
+
+echo "[$SLURM_JOB_ID:$SLURM_ARRAY_TASK_ID] → ALG=$ALG | T=$T"
+
+# ─── DIRECTORIES (append -finetune to existing) ─────────────────
+DATA_DIR="processed_datasets/${ALG}"            # read-only inputs
+LOG_DIR="logs-finetune/${ALG}"                  # logs → logs-finetune/ALG
+OUT_DIR="${DATA_DIR}-finetune"                  # outputs → processed_datasets/ALG-finetune
+mkdir -p "${LOG_DIR}" "${OUT_DIR}"
+
+INPUT_JSON="${DATA_DIR}/data.jsonl"
+MSG_FILE="${DATA_DIR}/codeio_1k_msg.jsonl"
+
+# ─── MODEL: base + LoRA (unmerged) ──────────────────────────────
+BASE_MODEL="Qwen/QwQ-32B"
+MODEL_TAG=$(basename "$BASE_MODEL" | sed -E 's/-([0-9]+)[bB]$/-\1B/')
+FT_DIR="${FINETUNE_ROOT}/${ALG}/${MODEL_TAG}/lora/sft"
+ADAPTER="${FT_DIR}"
+
+# If you require a merged checkpoint instead, uncomment this block:
+# MERGED_DIR="${FT_DIR}/export-merged"
+# [[ -f "${MERGED_DIR}/config.json" ]] || { echo "❌ Missing merged checkpoint at: ${MERGED_DIR}"; exit 2; }
+# MODEL="${MERGED_DIR}"
+
+# Outputs now live in OUT_DIR (next to dataset dir, with -finetune suffix)
+GENS_PREFIX="${OUT_DIR}/codeio_1k_gens"
+OUT_FILE="${GENS_PREFIX}_model_${MODEL_TAG}_temp_${T}_n${NUM_COMPLETIONS}.jsonl"
+VERIF_FILE="${OUT_FILE%.jsonl}_verified.jsonl"
+
+# ─── INFERENCE WITH DYNAMIC TP_SIZE & MAX_LENGTH ────────────────
+# Match TP_SIZES to --gres=gpu:4
+TP_SIZES=(1 2 4)
+INITIAL_MAX_LENGTH=32768
+MIN_MAX_LENGTH=2048
+
+# start with FlashAttention enabled (flip to fallback on error)
+export VLLM_USE_V1=1
+
+for TP in "${TP_SIZES[@]}"; do
+  ML=$INITIAL_MAX_LENGTH
+  while true; do
+    LOG_FILE="${LOG_DIR}/${MODEL_TAG}_T${T}_tp${TP}_ml${ML}.log"
+    echo "[$SLURM_JOB_ID] Trying tp_size=${TP}, max_length=${ML}, VLLM_USE_V1=${VLLM_USE_V1}" | tee "${LOG_FILE}"
+
+    CURRENT_OUT=${OUT_TMP:-${OUT_FILE}}
+
+    singularity exec --nv \
+      --bind "$(pwd)":/workspace \
+      /projects/public/brics/containers/e4s/e4s-cuda90-aarch64-25.06.sif \
+      bash -lc "export VLLM_USE_V1=${VLLM_USE_V1} HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 && cd /workspace && \
+        /py3.10/bin/python src/batched_api_inference.py \
+          --model '${BASE_MODEL}' \
+          --lora_adapter '${ADAPTER}' \
+          --input '${MSG_FILE}' \
+          --output '${CURRENT_OUT}' \
+          --temperature ${T} \
+          --num_completions ${NUM_COMPLETIONS} \
+          --tp_size ${TP} \
+          --max_tokens ${ML} \
+          --hf_offline \
+          --cache_dir /home/u5u/nmaveli.u5u/.cache/huggingface/hub \
+      " >> "${LOG_FILE}" 2>&1
+    EXIT=$?
+
+    if [ $EXIT -eq 0 ]; then
+      echo "[$SLURM_JOB_ID] Success @ tp=${TP}, max_length=${ML}" | tee -a "${LOG_FILE}"
+      break 2
+    fi
+
+    if grep -qi "out of memory" "${LOG_FILE}"; then
+      echo "[$SLURM_JOB_ID] OOM @ tp=${TP}; moving to next TP" | tee -a "${LOG_FILE}"
+      break
+    fi
+
+    if grep -qiE "Head size .* not supported by FlashAttention" "${LOG_FILE}"; then
+      if [ "${VLLM_USE_V1}" -eq 0 ]; then
+        echo "[$SLURM_JOB_ID] Already using fallback backend; cannot recover" | tee -a "${LOG_FILE}"
+        exit 1
+      fi
+      export VLLM_USE_V1=0
+      echo "[$SLURM_JOB_ID] FlashAttention error; setting VLLM_USE_V1=0 and retrying" | tee -a "${LOG_FILE}"
+      continue
+    fi
+
+    if grep -qiE "max_model_len|max_model_length|User-specified max_model_len" "${LOG_FILE}"; then
+      if [ ${ML} -le ${MIN_MAX_LENGTH} ]; then
+        echo "[$SLURM_JOB_ID] Reached min max_length=${MIN_MAX_LENGTH}; terminating" | tee -a "${LOG_FILE}"
+        exit 1
+      fi
+      ML=$(( ML / 2 ))
+      echo "[$SLURM_JOB_ID] max_length error; retrying with max_length=${ML}" | tee -a "${LOG_FILE}"
+      continue
+    fi
+
+    echo "[$SLURM_JOB_ID] Unexpected error (exit $EXIT); see ${LOG_FILE}" >&2
+    exit $EXIT
+  done
+done
+
+# ─── MERGE RESUMED OUTPUT (stays in ALG-finetune dir) ───────────
+if [ -n "${OUT_TMP:-}" ]; then
+  echo "[$SLURM_JOB_ID] Merging ${OUT_TMP} into ${OUT_FILE}..."
+  cat "${OUT_TMP}" >> "${OUT_FILE}"
+  rm "${OUT_TMP}"
+  echo "[$SLURM_JOB_ID] Now have $(wc -l < "${OUT_FILE}")/$(wc -l < "${MSG_FILE}") lines."
+fi
+
+# ─── VERIFY OUTPUT (writes alongside gens in ALG-finetune dir) ──
+python src/check_io_pred_acc_mp.py \
+  --parsed_file_name "${INPUT_JSON}" \
+  --pred_file_name   "${OUT_FILE}" \
+  --res_file_name    "${VERIF_FILE}" \
+  --algo

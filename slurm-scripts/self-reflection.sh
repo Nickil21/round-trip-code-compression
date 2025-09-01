@@ -46,9 +46,10 @@ for ALGO in "${ALGORITHMS[@]}"; do
   LOGDIR="${WORKDIR}/logs/${ALGO}-reflect"
   mkdir -p "$LOGDIR"
 
-  for INPUT in "processed_datasets/${ALGO}"/*.jsonl; do
+  for INPUT in "processed_datasets_test/${ALGO}"/*_verified.jsonl; do
     BASENAME="$(basename "${INPUT}" .jsonl)"
-    OUTPUT="processed_datasets/${ALGO}/${BASENAME}_reflected.jsonl"
+    OUTPUT="processed_datasets_test/${ALGO}-reflect/${BASENAME}.jsonl"
+    STATS="processed_datasets_test/${ALGO}-reflect/${BASENAME}_stats.csv"
     MODEL="$(python - "${INPUT}" <<'PY'
 import json, sys
 path = sys.argv[1]
@@ -78,14 +79,23 @@ PY
           --model ${MODEL} \
           --temperature ${TEMP} \
           --algo ${ALGO} \
-          --num_gpus 4 \
+          --num_gpus 1 \
           --max_model_len 8192 \
-          --gpu_memory_utilization 0.95 \
+          --gpu_memory_utilization 0.9 \
           --critique_style B \
           --gt_stop_on em \
           --reflection_rounds 2  \
-          --subset :5 \
-          --gt_allow_leak"
-    > "${LOGDIR}/self_reflection.log" 2>&1
+          --hf_offline \
+          --cache_dir /home/u5u/nmaveli.u5u/.cache/huggingface/hub \
+          --force_answer_tags \
+          --on_mismatch annotate \
+          --max_tokens 1024 \
+          --model_ctx 8192 \
+          --gen_tokens 512 \
+          --safety_margin 64 \
+          --truncate_hard_chars 16000 \
+          --chars_per_token 1.5 \
+          --per_item_stats_csv ${STATS}" \
+    > "${LOGDIR}/${BASENAME}.log" 2>&1
   done
 done

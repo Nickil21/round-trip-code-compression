@@ -81,18 +81,18 @@ MSG_FILE="${DATA_DIR}/codeio_1k_msg.jsonl"
 GENS_PREFIX="${DATA_DIR}/codeio_1k_gens"
 
 # ─── PREPARE DATA & PROMPTS ─────────────────────────────────────
-echo "[$SLURM_JOB_ID] Preparing data for $ALG"
-python tasks/generate_data.py \
-  --algorithms "${ALG}" \
-  --source mixed \
-  --count 50
+# echo "[$SLURM_JOB_ID] Preparing data for $ALG"
+# python tasks/generate_data.py \
+#   --algorithms "${ALG}" \
+#   --source mixed \
+#   --count 50
 
-echo "[$SLURM_JOB_ID] Building prompts for $ALG"
-python src/build_codeio_msg.py \
-  --input_file "${INPUT_JSON}" \
-  --output_file "${MSG_FILE}" \
-  --algorithm "${ALG}" \
-  --prompt_type zero_shot
+# echo "[$SLURM_JOB_ID] Building prompts for $ALG"
+# python src/build_codeio_msg.py \
+#   --input_file "${INPUT_JSON}" \
+#   --output_file "${MSG_FILE}" \
+#   --algorithm "${ALG}" \
+#   --prompt_type zero_shot
 
 # ─── INFERENCE WITH DYNAMIC TP_SIZE & MAX_LENGTH ───────────────
 TP_SIZES=(1 2 4 8)
@@ -127,7 +127,9 @@ for TP in "${TP_SIZES[@]}"; do
           --temperature ${T} \
           --num_completions ${NUM_COMPLETIONS} \
           --tp_size ${TP} \
-          --max_tokens ${ML}" \
+          --max_tokens ${ML} \
+          --hf_offline \
+          --cache_dir /home/u5u/nmaveli.u5u/.cache/huggingface/hub" 
       >> "${LOG_FILE}" 2>&1
     EXIT=$?
 

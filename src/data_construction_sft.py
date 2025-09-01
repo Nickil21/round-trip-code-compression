@@ -73,6 +73,6 @@ if __name__ == "__main__":
     print(f"Final Data Size: {len(messages_list)}")
     
     import json
-    with open(args.data_dir + args.algorithm + os.sep + args.output_file, 'w') as f:
+    with open(args.output_file, 'w') as f:
         for message in messages_list:
             f.write(json.dumps({'messages': message}) + '\n')

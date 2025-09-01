@@ -38,15 +38,18 @@ nvidia-smi --list-gpus
 # ─── Loop over algorithms, sequentially ─────────────────────────────────
 for ALGO in "${ALGORITHMS[@]}"; do
   DATADIR="${WORKDIR}/processed_datasets/${ALGO}"
+  OUTPUTDIR="${WORKDIR}/LLaMA-Factory/data"
   LOGDIR="${WORKDIR}/logs/${ALGO}"
   mkdir -p "$DATADIR" "$LOGDIR"
 
   # data-prep steps
-  # python tasks/generate_data.py         --algorithms "$ALGO" --source mixed --count 100
-  # python src/build_codeio_msg.py        \
-  #        --input_file "${DATADIR}/data.jsonl"         \
-  #        --output_file "${DATADIR}/codeio_1k_msg.jsonl" \
-  #        --algorithm "$ALGO"
+  python tasks/generate_data.py  --algorithms "$ALGO" --source mixed --count 50
+  python src/build_codeio_msg.py        \
+         --input_file "${DATADIR}/data.jsonl"         \
+         --output_file "${DATADIR}/codeio_1k_msg.jsonl" \
+         --algorithm "$ALGO" \
+         --prompt_type zero_shot
+      
   python src/generate_execution_trace.py --algorithm "$ALGO"
   python src/filter_execution_trace.py   --algorithm "$ALGO"
 
@@ -59,12 +62,13 @@ for ALGO in "${ALGORITHMS[@]}"; do
         --algorithm $ALGO \
         --translator_model mistralai/Mistral-7B-Instruct-v0.3 \
         --num_gpus 1"  \
-    > "${LOGDIR}/translated.log" 2>&1
+    > "${LOGDIR}/translated_exec_trace.log" 2>&1
 
   echo "[$ALGO] translation log → ${LOGDIR}/translated.log"
 
   # data construction for SFT
-  python src/data_construction_sft.py --algorithm "$ALGO" 
+  python src/data_construction_sft.py --algorithm "$ALGO" --output_file "${OUTPUTDIR}/${ALGO}_training_data_sft.jsonl" --trained_model Qwen/QwQ-32B
+  jq -s '.' "${OUTPUTDIR}/${ALGO}_training_data_sft.jsonl" > "${OUTPUTDIR}/${ALGO}_training_data_sft.json"
 
 done
 
