@@ -10,6 +10,21 @@ from collections import defaultdict
 from codeio_utils import *
 from utils import *
 
+
+# add near the top (after imports)
+def _json_safe(obj):
+    """Recursively convert non-JSON types (e.g., Ellipsis, NaN, Inf) to safe values."""
+    if obj is Ellipsis:
+        return None  # or "..." if you prefer a visible placeholder
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+    if isinstance(obj, (list, tuple)):
+        return [_json_safe(x) for x in obj]
+    if isinstance(obj, dict):
+        return {str(k): _json_safe(v) for k, v in obj.items()}
+    return obj
+
 # =====================================================================
 # Robust JSON extractors (override any imported ones)
 # Strategy: explicitly recover the LAST dict that contains an "output" key.
@@ -198,11 +213,13 @@ VALIDATORS = {
 
 def check_pred(item, algo, *, float_tol=1e-3):
     def resp(status, message, actual=None, predicted=None):
+        a = _json_safe(actual)
+        p = _json_safe(predicted)
         return {
             "status": status,
             "message": message,
-            "actual": json.dumps(actual) if actual is not None else None,
-            "predicted": json.dumps(predicted) if predicted is not None else None,
+            "actual": json.dumps(a, ensure_ascii=False) if a is not None else None,
+            "predicted": json.dumps(p, ensure_ascii=False) if p is not None else None
         }
 
     io_pred = item.get("io_pred", "")

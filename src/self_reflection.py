@@ -127,6 +127,8 @@ def get_args():
     p.add_argument("--max_model_len", default=4096, type=int, help="True backend context window (tokens).")
     p.add_argument("--gpu_memory_utilization", default=0.90, type=float,
                    help="vLLM GPU memory utilization (0.0–1.0).")
+    p.add_argument("--rope_scaling", default=None, type=str,
+                   help='JSON for RoPE scaling, e.g. \'{"name":"yarn","factor":16.0}\'.')
 
     # Reflection loop
     p.add_argument("--reflection_rounds", default=2, type=int,
@@ -507,7 +509,7 @@ REVISION_USER_LEAK = (
 # =========================
 # vLLM init
 # =========================
-def init_vllm(model_name, num_gpus, tp_size, max_model_len, gpu_memory_utilization, download_dir=None, offline=False):
+def init_vllm(model_name, num_gpus, tp_size, max_model_len, gpu_memory_utilization, download_dir=None, offline=False, rope_scaling=None):
     if LLM is None or SamplingParams is None:
         raise RuntimeError("vLLM not available; install vllm to use non-OpenAI mode.")
     tp = num_gpus or tp_size or 1
@@ -516,15 +518,22 @@ def init_vllm(model_name, num_gpus, tp_size, max_model_len, gpu_memory_utilizati
         print(f"[vLLM] Using download/cache dir: {download_dir}")
     if offline:
         print("[vLLM] HF offline mode is ON (HF_HUB_OFFLINE=1, TRANSFORMERS_OFFLINE=1).")
-    llm = LLM(
+        
+    kwargs = dict(
         model=model_name,
         download_dir=download_dir,
         tensor_parallel_size=tp,
         dtype="auto",
         trust_remote_code=True,
         max_model_len=max_model_len,
-        gpu_memory_utilization=gpu_memory_utilization,
-    )
+        gpu_memory_utilization=gpu_memory_utilization
+        )
+
+    if rope_scaling:
+        kwargs["rope_scaling"] = rope_scaling
+        print(f"[vLLM] rope_scaling = {rope_scaling}")
+    
+    llm = LLM(**kwargs)
     return llm
 
 # =========================
@@ -612,6 +621,12 @@ def main():
 
     # Prepare models
     llm = None
+    rope_scaling_cfg = None
+    if args.rope_scaling:
+        try:
+            rope_scaling_cfg = json.loads(args.rope_scaling)
+        except Exception as e:
+            raise SystemExit(f"Invalid --rope_scaling JSON: {e}")
     if args.use_openai:
         _ensure_openai()
         print(f"Using OpenAI model: {model_to_load}")
@@ -624,6 +639,7 @@ def main():
             gpu_memory_utilization=float(args.gpu_memory_utilization),
             download_dir=hub_root,
             offline=bool(args.hf_offline),
+            rope_scaling=rope_scaling_cfg
         )
         print(f"Using vLLM model: {model_to_load}")
 
@@ -999,7 +1015,7 @@ def main():
 
         if len(out_buf) >= int(args.flush_every):
             write_jsonl(out_buf, args.output, mode="a")
-            print(f="[flush] Wrote {len(out_buf)} items to {args.output}")
+            print(f"[flush] Wrote {len(out_buf)} items to {args.output}")
             out_buf = []
 
     if out_buf:

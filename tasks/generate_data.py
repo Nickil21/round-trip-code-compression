@@ -135,7 +135,7 @@ class SyntheticDataGenerator:
         while len([c for _, c in entries if c == "string_dna_kmer_concat"]) < target and len(entries) < count:
             k = random.choice([3, 4, 5, 6])
             kmers = {self._dna_random(k) for _ in range(random.randint(10, 50))}
-            add(''.join(kmers), "dna_kmer_concat")
+            add(''.join(sorted(kmers)), "dna_kmer_concat")
 
         # Top up uniquely if needed
         while len(entries) < count:
