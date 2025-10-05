@@ -95,9 +95,9 @@ if __name__ == "__main__":
 
     # filter out prompts longer than 40960 tokens which the max length for Qwen3-32B
     org_count = len(inputs)
-    total_data = [data for i, data in enumerate(total_data) if len(inputs[i]) <= 65536]
-    inputs = [input for input in inputs if len(input) <= 65536]
-    print(f"Filtered {org_count - len(inputs)} inputs longer than 65536 tokens")
+    total_data = [data for i, data in enumerate(total_data) if len(inputs[i]) <= 32768]
+    inputs = [input for input in inputs if len(input) <= 32768]
+    print(f"Filtered {org_count - len(inputs)} inputs longer than 32768 tokens")
     print(f"Filtered {org_count - len(total_data)} data accordingly")
 
     llm = LLM(model=args.translator_model, tensor_parallel_size=args.num_gpus, dtype=torch.bfloat16)

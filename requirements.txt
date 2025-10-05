@@ -16,3 +16,5 @@ logits_processor_zoo
 pympler
 dotenv
 huggingface_hub
+tabulate
+matplotlib

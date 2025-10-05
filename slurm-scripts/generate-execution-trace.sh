@@ -55,7 +55,7 @@ for ALGO in "${ALGORITHMS[@]}"; do
 
   # translation step: uses all 8 GPUs (no manual subset math)
   singularity exec --nv \
-    --bind /home/u5u/nmaveli.u5u/projects/round-trip-code-compression:/workspace \
+    --bind /home/u5an/nmaveli.u5an/projects/round-trip-code-compression:/workspace \
     /projects/public/brics/containers/e4s/e4s-cuda90-aarch64-25.06.sif \
     bash -lc "cd /workspace && \
       /py3.10/bin/python src/execution_trace_translation.py \

@@ -1,0 +1,135 @@
+---
+config:
+  flowchart:
+    defaultRenderer: elk
+    nodeSpacing: 80
+    rankSpacing: 80
+    padding: 10
+    wrappingWidth: 200
+    titleTopMargin: 20
+    curve: linear
+    theme: base
+    themeVariables:
+      fontSize: 25px
+      background: '#FFF8F0'
+    block:
+      padding: 12
+    layout: elk
+  layout: dagre
+---
+flowchart LR
+ subgraph F_Top["<b>output prediction</b>"]
+    direction LR
+        F_LLM1(["LLM"])
+        F_OP["<b>(1)</b> Output Prediction<br>(Predict z from X, enc)"]
+        F_enc["enc"]
+        F_X_in["X"]
+  end
+ subgraph F_Bot["<b>input prediction with inversion</b>"]
+    direction LR
+        F_Xp_out@{ label: "X'" }
+        F_LLM2(["LLM"])
+        F_IP@{ label: "<b>(2)</b> Input Prediction<br>(Infer X' from z, enc by inverting enc→dec)" }
+        F_z["z"]
+  end
+ subgraph Fwd["<b>Encoder with Input</b>"]
+    direction LR
+        F_Top
+        F_Bot
+  end
+ subgraph I_Top["<b>output prediction with inversion</b>"]
+    direction LR
+        I_LLM1(["LLM"])
+        I_OP@{ label: "<b>(3)</b> Output Prediction Prompt<br>(Infer z from X', dec by inverting dec→enc)" }
+        I_dec["dec"]
+        I_X_in["X"]
+  end
+ subgraph I_Bot["<b>input prediction</b>"]
+    direction LR
+        I_Xp_out@{ label: "X'" }
+        I_LLM2(["LLM"])
+        I_IP@{ label: "<b>(4)</b> Input Prediction<br>(Predict X' from z, dec)" }
+        I_z["z"]
+  end
+ subgraph Invertible["<b>Decoder with Input</b>"]
+    direction LR
+        I_Top
+        I_Bot
+  end
+ subgraph Comp["<br>"]
+    direction LR
+        IC_Title["Basic Compression Pipeline"]
+        C_X["X"]
+        C_enc["enc"]
+        C_z["z"]
+        C_dec["dec"]
+        C_Xp@{ label: "X'" }
+  end
+    C_X --> C_enc
+    C_enc --> C_z
+    C_z --> C_dec
+    C_dec --> C_Xp
+    I_X_in --> I_OP
+    I_dec --> I_OP & I_IP
+    I_OP --> I_LLM1
+    I_LLM1 --> I_z
+    I_z --> I_IP
+    I_IP --> I_LLM2
+    I_LLM2 --> I_Xp_out
+    F_X_in --> F_OP & RT@{ label: "Round-trip correctness check:<br>X = X' ?" }
+    F_enc --> F_OP & F_IP
+    F_OP --> F_LLM1
+    F_LLM1 --> F_z
+    F_z --> F_IP
+    F_IP --> F_LLM2
+    F_LLM2 --> F_Xp_out
+    I_Xp_out --> RT
+    F_Xp_out --> RT
+    F_OP@{ shape: rect}
+    F_X_in@{ shape: rect}
+    F_Xp_out@{ shape: rect}
+    F_IP@{ shape: rect}
+    I_OP@{ shape: rect}
+    I_X_in@{ shape: rect}
+    I_Xp_out@{ shape: rect}
+    I_IP@{ shape: rect}
+    C_X@{ shape: rect}
+    C_Xp@{ shape: rect}
+    RT@{ shape: diamond}
+     F_LLM1:::llm
+     F_OP:::task
+     F_enc:::encoding
+     F_X_in:::input
+     F_Xp_out:::recon
+     F_LLM2:::llm
+     F_IP:::task
+     F_z:::latent
+     I_LLM1:::llm
+     I_OP:::task
+     I_dec:::decoding
+     I_X_in:::input
+     I_Xp_out:::recon
+     I_LLM2:::llm
+     I_IP:::task
+     I_z:::latent
+     IC_Title:::whiteBox,Ash
+     C_X:::input
+     C_enc:::encoding
+     C_z:::latent
+     C_dec:::decoding
+     C_Xp:::recon
+     RT:::check
+    classDef input      fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px,rounded
+    classDef encoding   fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,rounded
+    classDef latent     fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px,rounded
+    classDef decoding   fill:#E8F5E9,stroke:#43A047,stroke-width:2px,rounded
+    classDef recon      fill:#FFEBEE,stroke:#E53935,stroke-width:2px,rounded
+    classDef task       fill:#FFFDE7,stroke:#FDD835,stroke-width:2px,rounded
+    classDef llm        fill:#E0F7FA,stroke:#00838F,stroke-width:2px,rounded
+    classDef whiteBox   fill:#ffffff,stroke:#333333,stroke-width:2px,rounded,font-weight:bold
+    classDef Ash        stroke-width:1px,stroke-dasharray:none,stroke:#999999,fill:#EEEEEE,color:#000000
+    classDef check      fill:#E8F5E9,stroke:#43A047,stroke-width:3px,rounded
+    classDef bgstyle    fill:#FFF8F0,stroke:none
+    style Fwd        fill:transparent,stroke:#FF6D00,stroke-width:2px
+    style Invertible fill:transparent,stroke:#FF6D00,stroke-width:2px,color:#000000
+    style Comp       fill:#E0F2F1,stroke:#009688,stroke-width:2px
