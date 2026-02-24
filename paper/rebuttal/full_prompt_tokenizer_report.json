@@ -1,0 +1,1589 @@
+{
+  "results": [
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 768,
+      "chars_per_token": 3.9701
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 829,
+      "chars_per_token": 4.035
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 860,
+      "chars_per_token": 4.0919
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0122
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 866,
+      "chars_per_token": 3.8926
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 1024,
+      "chars_per_token": 3.5342
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 954,
+      "chars_per_token": 3.805
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 1018,
+      "chars_per_token": 3.7043
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 690,
+      "chars_per_token": 4.2565
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 795,
+      "chars_per_token": 3.9409
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.2546
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 805,
+      "chars_per_token": 4.0236
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 665,
+      "chars_per_token": 4.2406
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 647,
+      "chars_per_token": 4.3091
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 768,
+      "chars_per_token": 3.9701
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 829,
+      "chars_per_token": 4.035
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 860,
+      "chars_per_token": 4.0919
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0122
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 866,
+      "chars_per_token": 3.8926
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 1024,
+      "chars_per_token": 3.5342
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 954,
+      "chars_per_token": 3.805
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 1018,
+      "chars_per_token": 3.7043
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 690,
+      "chars_per_token": 4.2565
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 795,
+      "chars_per_token": 3.9409
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.2546
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 805,
+      "chars_per_token": 4.0236
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 665,
+      "chars_per_token": 4.2406
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 647,
+      "chars_per_token": 4.3091
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-32B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.0013
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 817,
+      "chars_per_token": 4.0942
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 854,
+      "chars_per_token": 4.1206
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 807,
+      "chars_per_token": 4.0719
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 868,
+      "chars_per_token": 3.8836
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 980,
+      "chars_per_token": 3.6929
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 939,
+      "chars_per_token": 3.8658
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 991,
+      "chars_per_token": 3.8052
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 683,
+      "chars_per_token": 4.3001
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 766,
+      "chars_per_token": 4.0901
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 755,
+      "chars_per_token": 4.294
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 776,
+      "chars_per_token": 4.174
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 663,
+      "chars_per_token": 4.2534
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 668,
+      "chars_per_token": 4.0838
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 641,
+      "chars_per_token": 4.3495
+    },
+    {
+      "model": "gpt-oss-20b",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 772,
+      "chars_per_token": 4.1075
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 764,
+      "chars_per_token": 3.9908
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0842
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 856,
+      "chars_per_token": 4.111
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 809,
+      "chars_per_token": 4.0618
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 862,
+      "chars_per_token": 3.9107
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 974,
+      "chars_per_token": 3.7156
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 934,
+      "chars_per_token": 3.8865
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 984,
+      "chars_per_token": 3.8323
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 684,
+      "chars_per_token": 4.2939
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 767,
+      "chars_per_token": 4.0847
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 756,
+      "chars_per_token": 4.2884
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 777,
+      "chars_per_token": 4.1686
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 661,
+      "chars_per_token": 4.2663
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 643,
+      "chars_per_token": 4.3359
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 768,
+      "chars_per_token": 3.9701
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 829,
+      "chars_per_token": 4.035
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 860,
+      "chars_per_token": 4.0919
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0122
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 866,
+      "chars_per_token": 3.8926
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 1024,
+      "chars_per_token": 3.5342
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 954,
+      "chars_per_token": 3.805
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 1018,
+      "chars_per_token": 3.7043
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 690,
+      "chars_per_token": 4.2565
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 795,
+      "chars_per_token": 3.9409
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.2546
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 805,
+      "chars_per_token": 4.0236
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 665,
+      "chars_per_token": 4.2406
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 647,
+      "chars_per_token": 4.3091
+    },
+    {
+      "model": "Qwen2.5-7B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 768,
+      "chars_per_token": 3.9701
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 829,
+      "chars_per_token": 4.035
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 860,
+      "chars_per_token": 4.0919
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0122
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 866,
+      "chars_per_token": 3.8926
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 1024,
+      "chars_per_token": 3.5342
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 954,
+      "chars_per_token": 3.805
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 1018,
+      "chars_per_token": 3.7043
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 690,
+      "chars_per_token": 4.2565
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 795,
+      "chars_per_token": 3.9409
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.2546
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 805,
+      "chars_per_token": 4.0236
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 665,
+      "chars_per_token": 4.2406
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 647,
+      "chars_per_token": 4.3091
+    },
+    {
+      "model": "Qwen3-Coder-30B-A3B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 768,
+      "chars_per_token": 3.9701
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 829,
+      "chars_per_token": 4.035
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 860,
+      "chars_per_token": 4.0919
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0122
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 866,
+      "chars_per_token": 3.8926
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 1024,
+      "chars_per_token": 3.5342
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 954,
+      "chars_per_token": 3.805
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 1018,
+      "chars_per_token": 3.7043
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 690,
+      "chars_per_token": 4.2565
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 795,
+      "chars_per_token": 3.9409
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.2546
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 805,
+      "chars_per_token": 4.0236
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 665,
+      "chars_per_token": 4.2406
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 647,
+      "chars_per_token": 4.3091
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 768,
+      "chars_per_token": 3.9701
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 829,
+      "chars_per_token": 4.035
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 860,
+      "chars_per_token": 4.0919
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0122
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 866,
+      "chars_per_token": 3.8926
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 1024,
+      "chars_per_token": 3.5342
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 954,
+      "chars_per_token": 3.805
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 1018,
+      "chars_per_token": 3.7043
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 690,
+      "chars_per_token": 4.2565
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 795,
+      "chars_per_token": 3.9409
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.2546
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 805,
+      "chars_per_token": 4.0236
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 665,
+      "chars_per_token": 4.2406
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 647,
+      "chars_per_token": 4.3091
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Qwen-7B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 768,
+      "chars_per_token": 3.9701
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 829,
+      "chars_per_token": 4.035
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 860,
+      "chars_per_token": 4.0919
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0122
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 866,
+      "chars_per_token": 3.8926
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 1024,
+      "chars_per_token": 3.5342
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 954,
+      "chars_per_token": 3.805
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 1018,
+      "chars_per_token": 3.7043
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 690,
+      "chars_per_token": 4.2565
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 795,
+      "chars_per_token": 3.9409
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.2546
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 805,
+      "chars_per_token": 4.0236
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 665,
+      "chars_per_token": 4.2406
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 647,
+      "chars_per_token": 4.3091
+    },
+    {
+      "model": "Qwen2.5-32B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 768,
+      "chars_per_token": 3.9701
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 829,
+      "chars_per_token": 4.035
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 860,
+      "chars_per_token": 4.0919
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0122
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 866,
+      "chars_per_token": 3.8926
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 1024,
+      "chars_per_token": 3.5342
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 954,
+      "chars_per_token": 3.805
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 1018,
+      "chars_per_token": 3.7043
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 690,
+      "chars_per_token": 4.2565
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 795,
+      "chars_per_token": 3.9409
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.2546
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 805,
+      "chars_per_token": 4.0236
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 665,
+      "chars_per_token": 4.2406
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 647,
+      "chars_per_token": 4.3091
+    },
+    {
+      "model": "Qwen2.5-Coder-32B-Instruct",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3049,
+      "prompt_token_len": 768,
+      "chars_per_token": 3.9701
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3345,
+      "prompt_token_len": 829,
+      "chars_per_token": 4.035
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "ae",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3519,
+      "prompt_token_len": 860,
+      "chars_per_token": 4.0919
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "ae",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3286,
+      "prompt_token_len": 819,
+      "chars_per_token": 4.0122
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 3371,
+      "prompt_token_len": 866,
+      "chars_per_token": 3.8926
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3619,
+      "prompt_token_len": 1024,
+      "chars_per_token": 3.5342
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "huffman",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3630,
+      "prompt_token_len": 954,
+      "chars_per_token": 3.805
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "huffman",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3771,
+      "prompt_token_len": 1018,
+      "chars_per_token": 3.7043
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2937,
+      "prompt_token_len": 690,
+      "chars_per_token": 4.2565
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 3133,
+      "prompt_token_len": 795,
+      "chars_per_token": 3.9409
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "lzw",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 3242,
+      "prompt_token_len": 762,
+      "chars_per_token": 4.2546
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "lzw",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3239,
+      "prompt_token_len": 805,
+      "chars_per_token": 4.0236
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction",
+      "task_short": "encode",
+      "prompt_char_len": 2820,
+      "prompt_token_len": 665,
+      "chars_per_token": 4.2406
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction",
+      "task_short": "decode",
+      "prompt_char_len": 2728,
+      "prompt_token_len": 669,
+      "chars_per_token": 4.0777
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "rle",
+      "task_type": "output_execution_prediction_with_inversion",
+      "task_short": "encode_inv",
+      "prompt_char_len": 2788,
+      "prompt_token_len": 647,
+      "chars_per_token": 4.3091
+    },
+    {
+      "model": "QwQ-32B",
+      "algorithm": "rle",
+      "task_type": "input_execution_prediction_with_inversion",
+      "task_short": "decode_inv",
+      "prompt_char_len": 3171,
+      "prompt_token_len": 769,
+      "chars_per_token": 4.1235
+    }
+  ],
+  "failures": []
+}

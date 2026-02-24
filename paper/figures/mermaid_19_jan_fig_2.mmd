@@ -1,0 +1,43 @@
+---
+config:
+  flowchart:
+    defaultRenderer: elk
+    nodeSpacing: 100
+    rankSpacing: 100
+    padding: 5
+    wrappingWidth: 120
+    curve: basis
+  theme: default
+  themeVariables:
+    fontSize: 25px
+    fontFamily: 'Computer Modern, Latin Modern, serif'
+    background: '#FFFFFF'
+    primaryTextColor: '#000000'
+    lineColor: '#333333'
+---
+flowchart LR
+        C_X["<b>X</b> (Input)<br/>────<br/>'aaabbbcc'<br/><i>8 chars</i>"]
+        C_enc["<b>enc( )</b><br/>────<br/>Compression<br/><i>RLE</i>"]
+        C_z["<b>z</b><br/>────<br/>'a3b3c2'<br/><i>6 chars</i>"]
+        C_dec["<b>dec( )</b><br/>────<br/>Decompression<br/><i>expand</i>"]
+        C_Xp["<b>X'</b> (Output)<br/>────<br/>'aaabbbcc'<br/><i>8 chars</i>"]
+        
+        C_X --> C_enc --> C_z --> C_dec --> C_Xp
+    
+    C_X@{ shape: rounded}
+    C_z@{ shape: rounded}
+    C_Xp@{ shape: rounded}
+    C_enc@{ shape: rounded}
+    C_dec@{ shape: rounded}
+    
+    C_X:::input
+    C_enc:::encoding
+    C_z:::latent
+    C_dec:::decoding
+    C_Xp:::recon
+    
+    classDef input      fill:#E3F2FD,stroke:#1976D2,stroke-width:3px,color:#0D47A1
+    classDef encoding   fill:#FFF3E0,stroke:#F57C00,stroke-width:3px,color:#E65100
+    classDef latent     fill:#F3E5F5,stroke:#7B1FA2,stroke-width:3px,color:#4A148C
+    classDef decoding   fill:#E8F5E9,stroke:#388E3C,stroke-width:3px,color:#1B5E20
+    classDef recon      fill:#FFEBEE,stroke:#D32F2F,stroke-width:3px,color:#B71C1C

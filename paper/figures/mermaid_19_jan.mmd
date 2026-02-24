@@ -1,0 +1,112 @@
+---
+config:
+  flowchart:
+    defaultRenderer: elk
+    nodeSpacing: 80
+    rankSpacing: 80
+    padding: 12
+    wrappingWidth: 210
+    titleTopMargin: 20
+    curve: linear
+    theme: base
+    themeVariables:
+      fontSize: 25px
+      background: '#FFF8F0'
+    block:
+      padding: 12
+    layout: elk
+  layout: dagre
+---
+flowchart TB
+ subgraph B1_LLM_BOX["<b>LLM</b><br>(Predict z from X, enc)"]
+        B1_enc["enc( )"]
+  end
+ subgraph Block1["<b>(1) Output Prediction</b><br>LLM simulates enc on X"]
+    direction TB
+        B1_X["X"]
+        B1_LLM_BOX
+        B1_z["ẑ ≈ enc(X)"]
+  end
+ subgraph B2_LLM_BOX["<b>LLM</b><br>(Infer X' from z, enc by inverting enc→dec)"]
+        B2_enc["enc( )"]
+  end
+ subgraph Block2["<b>(2) Input Prediction with Inversion</b><br>LLM inverts enc on z"]
+    direction TB
+        B2_z["z"]
+        B2_LLM_BOX
+        B2_Xp@{ label: "X̂' ≈ enc<sup>-1</sup>(z)" }
+  end
+ subgraph B3_LLM_BOX["<b>LLM</b><br>(Infer z from X, dec by inverting dec→enc)"]
+        B3_dec["dec( )"]
+  end
+ subgraph Block3["<b>(3) Output Prediction with Inversion</b><br>LLM inverts dec on X"]
+    direction TB
+        B3_X["X"]
+        B3_LLM_BOX
+        B3_z["ẑ ≈ dec<sup>-1</sup>(X)"]
+  end
+ subgraph B4_LLM_BOX["<b>LLM</b><br>(Predict X' from z, dec)"]
+        B4_dec["dec( )"]
+  end
+ subgraph Block4["<b>(4) Input Prediction</b><br>LLM simulates dec on z"]
+    direction TB
+        B4_z["z"]
+        B4_LLM_BOX
+        B4_Xp@{ label: "X̂' ≈ dec(z)" }
+  end
+ subgraph Row1[" "]
+    direction LR
+        Block1
+        Block2
+        Block3
+        Block4
+  end
+    B1_X --> B1_LLM_BOX
+    B1_LLM_BOX --> B1_z
+    B2_z --> B2_LLM_BOX
+    B2_LLM_BOX --> B2_Xp
+    B3_X --> B3_LLM_BOX
+    B3_LLM_BOX --> B3_z
+    B4_z --> B4_LLM_BOX
+    B4_LLM_BOX --> B4_Xp
+    RT@{ label: "Round-trip check:<br/>X = X̂' ?" }
+    B1_X -.-> RT
+    B2_Xp -.-> RT
+    B4_Xp -.-> RT
+    B1_X@{ shape: rect}
+    B1_z@{ shape: rect}
+    B2_z@{ shape: rect}
+    B2_Xp@{ shape: rect}
+    B3_X@{ shape: rect}
+    B3_z@{ shape: rect}
+    B4_z@{ shape: rect}
+    B4_Xp@{ shape: rect}
+    RT@{ shape: diamond}
+     B1_enc:::encoding
+     B1_X:::input
+     B1_z:::latent
+     B2_enc:::encoding
+     B2_z:::latent
+     B2_Xp:::recon
+     B3_dec:::decoding
+     B3_X:::input
+     B3_z:::latent
+     B4_dec:::decoding
+     B4_z:::latent
+     B4_Xp:::recon
+     RT:::check
+    classDef input      fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px,rounded
+    classDef encoding   fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,rounded
+    classDef latent     fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px,rounded
+    classDef decoding   fill:#E8F5E9,stroke:#43A047,stroke-width:2px,rounded
+    classDef recon      fill:#FFEBEE,stroke:#E53935,stroke-width:2px,rounded
+    classDef check      fill:#C8E6C9,stroke:#2E7D32,stroke-width:3px,rounded
+    style B1_LLM_BOX    fill:#FFFDE7,stroke:#FDD835,stroke-width:3px
+    style B2_LLM_BOX    fill:#FFFDE7,stroke:#FDD835,stroke-width:3px
+    style B3_LLM_BOX    fill:#FFFDE7,stroke:#FDD835,stroke-width:3px
+    style B4_LLM_BOX    fill:#FFFDE7,stroke:#FDD835,stroke-width:3px
+    style Block1        fill:#FFF8F0,stroke:#FB8C00,stroke-width:2px
+    style Block2        fill:#FFF8F0,stroke:#FB8C00,stroke-width:2px
+    style Block3        fill:#FFF8F0,stroke:#43A047,stroke-width:2px
+    style Block4        fill:#FFF8F0,stroke:#43A047,stroke-width:2px
+    style Row1          fill:transparent,stroke:none

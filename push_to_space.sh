@@ -3,14 +3,13 @@
 source ~/miniforge3/bin/activate
 conda activate round-trip-myenv
 
-# find processed_datasets/ae processed_datasets/lzw processed_datasets/rle processed_datasets/huffman \
-#   -type f \( -name '*_verified.jsonl' -o -name '*.csv' \) \
-#   -delete
+# rm -f data/processed/{ae,lzw,rle,huffman,ae-reflect,lzw-reflect,rle-reflect,huffman-reflect}/*_verified.jsonl
+# rm -f data/processed/{ae,lzw,rle,huffman,ae-reflect,lzw-reflect,rle-reflect,huffman-reflect}/*_verified.csv
 
 python webapp/merge_data.py
 
 # CONFIGURATION — Edit these before running
-HF_TOKEN="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"  # 🔐 Replace with your actual token
+HF_TOKEN="${HF_TOKEN:?HF_TOKEN env var is not set. Run: export HF_TOKEN=hf_...}"
 SPACE_NAME="nickil-shay-antonio/round-trip-code-compression"  # Your Space path on HF
 REPO_DIR="webapp/round-trip-code-compression"  # Local clone of your HF Space
 

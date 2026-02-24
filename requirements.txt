@@ -1,6 +1,6 @@
 tqdm
 snoop
-Pympler
+pympler
 # vllm
 accelerate==1.7.0
 bitsandbytes
@@ -13,8 +13,7 @@ fuzzywuzzy
 openai
 transformers
 logits_processor_zoo
-pympler
-dotenv
+python-dotenv
 huggingface_hub
 tabulate
 matplotlib

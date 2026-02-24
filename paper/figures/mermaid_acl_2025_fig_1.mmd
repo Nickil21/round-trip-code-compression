@@ -1,0 +1,57 @@
+---
+config:
+  flowchart:
+    defaultRenderer: elk
+    nodeSpacing: 80
+    rankSpacing: 80
+    padding: 10
+    wrappingWidth: 200
+    titleTopMargin: 20
+    curve: linear
+    theme: base
+    themeVariables:
+      fontSize: 25px
+      background: '#FFF8F0'
+    block:
+      padding: 12
+    layout: elk
+  layout: dagre
+---
+flowchart LR
+ subgraph Comp["<br>"]
+    direction LR
+        IC_Title["Basic Compression Pipeline (lossless)"]
+        C_X["X
+        (e.g., hello)"]
+        C_enc["enc
+        (e.g., UPPERCASE(.))"]
+        C_z["z
+        (e.g., HELLO)"]
+        C_dec["dec
+        (e.g., lowercase(.))"]
+        C_Xp@{ label: "X'
+        (e.g., hello)" }
+  end
+    C_X --> C_enc
+    C_enc --> C_z
+    C_z --> C_dec
+    C_dec --> C_Xp
+    C_X@{ shape: rect}
+    C_Xp@{ shape: rect}
+     C_X:::input
+     C_enc:::encoding
+     C_z:::latent
+     C_dec:::decoding
+     C_Xp:::recon
+    classDef input      fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px,rounded
+    classDef encoding   fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,rounded
+    classDef latent     fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px,rounded
+    classDef decoding   fill:#E8F5E9,stroke:#43A047,stroke-width:2px,rounded
+    classDef recon      fill:#FFEBEE,stroke:#E53935,stroke-width:2px,rounded
+    classDef task       fill:#FFFDE7,stroke:#FDD835,stroke-width:2px,rounded
+    classDef llm        fill:#E0F7FA,stroke:#00838F,stroke-width:2px,rounded
+    classDef whiteBox   fill:#ffffff,stroke:#333333,stroke-width:2px,rounded,font-weight:bold
+    classDef Ash        stroke-width:1px,stroke-dasharray:none,stroke:#999999,fill:#EEEEEE,color:#000000
+    classDef check      fill:#E8F5E9,stroke:#43A047,stroke-width:3px,rounded
+    classDef bgstyle    fill:#FFF8F0,stroke:none
+    style Comp       fill:#E0F2F1,stroke:#009688,stroke-width:2px

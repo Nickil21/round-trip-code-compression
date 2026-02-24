@@ -3,7 +3,7 @@
 # import pandas as pd
 
 # # This will load the entire file into memory
-# df = pd.read_json("processed_datasets/huffman/demo.jsonl", lines=True)
+# df = pd.read_json("data/processed/huffman/demo.jsonl", lines=True)
 
 # # Then you can iterate over rows if you like:
 # for idx, row in df.iterrows():
@@ -18,7 +18,7 @@
 import pandas as pd
 
 # read the entire file at once
-df = pd.read_csv('processed_datasets/rle/codeio_1k_gens_model_codegemma_7b_it_temp_0.8_n5_verified.csv')
+df = pd.read_csv('data/processed/rle/codeio_1k_gens_model_codegemma_7b_it_temp_0.8_n5_verified.csv')
 print(df['input'].value_counts())
 
 
@@ -40,23 +40,23 @@ I: 1830 O: 1830
 Wrote a batch of 3660 items.
 Batch 0 status: defaultdict(<class 'int'>, {'correct': 52, 'wrong': 1915, 'no answer': 1693})
 Traceback (most recent call last):
-  File "/lus/lfs1aip2/home/u5u/nmaveli.u5u/projects/round-trip-code-compression/src/check_io_pred_acc_mp.py", line 382, in <module>
+  File "/lus/lfs1aip2/home/u6cg/nmaveli.u6cg/projects/round-trip-code-compression/src/check_io_pred_acc_mp.py", line 382, in <module>
     main()
-  File "/lus/lfs1aip2/home/u5u/nmaveli.u5u/projects/round-trip-code-compression/src/check_io_pred_acc_mp.py", line 378, in main
+  File "/lus/lfs1aip2/home/u6cg/nmaveli.u6cg/projects/round-trip-code-compression/src/check_io_pred_acc_mp.py", line 378, in main
     df_items.to_csv(f"{res_file_name.replace('.jsonl', '.csv')}", index=False)
-  File "/lus/lfs1aip2/home/u5u/nmaveli.u5u/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/util/_decorators.py", line 333, in wrapper
+  File "/lus/lfs1aip2/home/u6cg/nmaveli.u6cg/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/util/_decorators.py", line 333, in wrapper
     return func(*args, **kwargs)
-  File "/lus/lfs1aip2/home/u5u/nmaveli.u5u/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/core/generic.py", line 3986, in to_csv
+  File "/lus/lfs1aip2/home/u6cg/nmaveli.u6cg/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/core/generic.py", line 3986, in to_csv
     return DataFrameRenderer(formatter).to_csv(
-  File "/lus/lfs1aip2/home/u5u/nmaveli.u5u/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/format.py", line 1014, in to_csv
+  File "/lus/lfs1aip2/home/u6cg/nmaveli.u6cg/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/format.py", line 1014, in to_csv
     csv_formatter.save()
-  File "/lus/lfs1aip2/home/u5u/nmaveli.u5u/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/csvs.py", line 270, in save
+  File "/lus/lfs1aip2/home/u6cg/nmaveli.u6cg/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/csvs.py", line 270, in save
     self._save()
-  File "/lus/lfs1aip2/home/u5u/nmaveli.u5u/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/csvs.py", line 275, in _save
+  File "/lus/lfs1aip2/home/u6cg/nmaveli.u6cg/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/csvs.py", line 275, in _save
     self._save_body()
-  File "/lus/lfs1aip2/home/u5u/nmaveli.u5u/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/csvs.py", line 313, in _save_body
+  File "/lus/lfs1aip2/home/u6cg/nmaveli.u6cg/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/csvs.py", line 313, in _save_body
     self._save_chunk(start_i, end_i)
-  File "/lus/lfs1aip2/home/u5u/nmaveli.u5u/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/csvs.py", line 324, in _save_chunk
+  File "/lus/lfs1aip2/home/u6cg/nmaveli.u6cg/miniforge3/envs/round-trip-myenv/lib/python3.10/site-packages/pandas/io/formats/csvs.py", line 324, in _save_chunk
     libwriters.write_csv_rows(
   File "pandas/_libs/writers.pyx", line 73, in pandas._libs.writers.write_csv_rows
 _csv.Error: need to escape, but no escapechar set

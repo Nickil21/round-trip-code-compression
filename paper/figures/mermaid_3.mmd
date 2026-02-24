@@ -1,0 +1,99 @@
+---
+config:
+  flowchart:
+    defaultRenderer: elk
+    nodeSpacing: 80
+    rankSpacing: 80
+    padding: 10
+    wrappingWidth: 200
+    titleTopMargin: 20
+    curve: linear
+    theme: neutral
+    themeVariables: { fontSize: 25px, background: '#FFF8F0' }
+    block: { padding: 12 }
+    layout: elk
+---
+
+flowchart LR
+subgraph ROW[" "]
+direction LR
+
+subgraph Comp["<b>Basic Compression Pipeline</b>"]
+direction TB
+  C_X@{label:"X",shape:rect}
+  C_enc["enc"]
+  C_z["z"]
+  C_dec["dec"]
+  C_Xp@{label:"X'",shape:rect}
+  C_X-->C_enc-->C_z-->C_dec-->C_Xp;
+end;
+
+subgraph FIG["<b>Predictive checks</b>"]
+direction TB
+
+  subgraph Fwd["<b>Encoder with Input</b>"]
+  direction LR
+    subgraph F_Top["<b>output prediction</b>"]
+    direction LR
+      F_LLM1(["LLM"])
+      F_OP@{label:"<b>(1)</b> Output Prediction<br>(Predict z from X, enc)",shape:rect}
+      F_enc["enc"]
+      F_X_in@{label:"X",shape:rect}
+    end;
+    subgraph F_Bot["<b>input prediction with inversion</b>"]
+    direction LR
+      F_Xp_out@{label:"X'",shape:rect}
+      F_LLM2(["LLM"])
+      F_IP@{label:"<b>(2)</b> Input Prediction<br>(Infer X' from z, enc by inverting enc→dec)",shape:rect}
+      F_z["z"]
+    end;
+  end;
+
+  subgraph Invertible["<b>Decoder with Input</b>"]
+  direction LR
+    subgraph I_Top["<b>output prediction with inversion</b>"]
+    direction LR
+      I_LLM1(["LLM"])
+      I_OP@{label:"<b>(3)</b> Output Prediction Prompt<br>(Infer z from X', dec by inverting dec→enc)",shape:rect}
+      I_dec["dec"]
+      I_X_in@{label:"X",shape:rect}
+    end;
+    subgraph I_Bot["<b>input prediction</b>"]
+    direction LR
+      I_Xp_out@{label:"X'",shape:rect}
+      I_LLM2(["LLM"])
+      I_IP@{label:"<b>(4)</b> Input Prediction<br>(Predict X' from z, dec)",shape:rect}
+      I_z["z"]
+    end;
+  end;
+
+  I_X_in&I_dec-->I_OP-->I_LLM1-->I_z;
+  I_z&I_dec-->I_IP-->I_LLM2-->I_Xp_out;
+  F_X_in&F_enc-->F_OP-->F_LLM1-->F_z;
+  F_z&F_enc-->F_IP-->F_LLM2-->F_Xp_out;
+
+  RT@{label:"Round-trip correctness check:<br>X = X' ?",shape:diamond}
+  I_Xp_out-->RT;
+  F_Xp_out-->RT;
+  F_X_in-->RT;
+end;
+
+end;
+
+classDef input fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px,rounded
+classDef encoding fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,rounded
+classDef latent fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px,rounded
+classDef decoding fill:#E8F5E9,stroke:#43A047,stroke-width:2px,rounded
+classDef recon fill:#FFEBEE,stroke:#E53935,stroke-width:2px,rounded
+classDef task fill:#FFFDE7,stroke:#FDD835,stroke-width:2px,rounded
+classDef llm fill:#E0F7FA,stroke:#00838F,stroke-width:2px,rounded
+classDef check fill:#E8F5E9,stroke:#43A047,stroke-width:3px,rounded
+
+class F_LLM1,F_LLM2,I_LLM1,I_LLM2 llm
+class F_OP,F_IP,I_OP,I_IP task
+class F_enc,C_enc encoding
+class I_dec,C_dec decoding
+class F_z,I_z,C_z latent
+class F_X_in,I_X_in,C_X input
+class F_Xp_out,I_Xp_out,C_Xp recon
+class RT check
