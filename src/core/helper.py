@@ -1,81 +1,58 @@
-model_sizes = {
-    "01-ai/Yi-Coder-9B-Chat":                    "8.8B",
-    "google/codegemma-7b-it":                    "8.5B",
-    "Qwen/Qwen3-4B":                             "4B",
-    "Qwen/Qwen3-8B":                             "8B",
-    "Qwen/Qwen3-32B":                            "32.8B",
-    "bigcode/starcoder2-15b-instruct-v0.1":      "15B",
-    "codellama/CodeLlama-70b-Python-hf":         "70B",
-    "codellama/CodeLlama-34b-Instruct-hf":       "34B",
-    "microsoft/Phi-3-mini-128k-instruct":        "3.8B",
-    "microsoft/Phi-3.5-mini-instruct":           "3.8B",
-    "meta-llama/Llama-3.1-8B-Instruct":          "8.03B",
-    "meta-llama/Llama-3.1-70B-Instruct":         "70B",
-    "meta-llama/Llama-3.2-1B-Instruct":          "1B",
-    "meta-llama/Llama-3.2-3B-Instruct":          "3B",
-    "microsoft/phi-4":                           "14.7B",
-    "microsoft/phi-2":                           "2.78B",
-    "mistralai/Codestral-22B-v0.1":              "22.2B",
-    "mistralai/Mistral-7B-Instruct-v0.3":        "7.24B",
-    "deepseek-ai/DeepSeek-R1-Distill-Llama-8B":  "8.03B",
-    "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B":  "32.8B",
-    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B": "70.6B",
-    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": "1.5B",
-    "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B":  "14.8B",
-    "gpt-4o":                                    "unknown",
-    "gpt-4o-mini":                               "8B",
-    "gpt-4.1":                                   "unknown",
-    "gpt-4.1-mini":                              "unknown",
-    "gpt-4.1-nano":                              "unknown",
-    "Qwen/Qwen2.5-Coder-32B-Instruct":           "32.8B",
-    "Qwen/Qwen2.5-Coder-14B-Instruct":           "14.8B",
-    "Qwen/QwQ-32B":                              "32.8B",
-    "deepseek-ai/deepseek-coder-33b-instruct":   "33.3B",
-    "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B":     "8.19B",
-    "Qwen/Qwen2.5-72B-Instruct":                 "72B",
-    "Qwen/Qwen2.5-7B-Instruct":                  "7.62B",
-    "Qwen/Qwen3-32B":                            "32.8B",
-    "WizardLMTeam/WizardLM-70B-V1.0":            "70B",
-    "openai/gpt-oss-20b":                        "20B"
-}
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Dict, List
+
+try:
+    import yaml
+except ModuleNotFoundError as exc:
+    raise ModuleNotFoundError(
+        "PyYAML is required for model config loading. Install with `pip install pyyaml`."
+    ) from exc
 
 
-model_categories = {
-    "01-ai/Yi-Coder-9B-Chat":                   "Code Generation",
-    "Qwen/Qwen3-4B":                            "General Instruction",
-    "Qwen/Qwen3-8B":                            "General Instruction",
-    "Qwen/Qwen3-32B":                           "General Instruction",
-    "bigcode/starcoder2-15b-instruct-v0.1":     "Code Generation",
-    "codellama/CodeLlama-70b-Python-hf":        "Code Generation",
-    "codellama/CodeLlama-34b-Instruct-hf":      "Code Generation",
-    "mistralai/Codestral-22B-v0.1":             "Code Generation",
-    "Qwen/Qwen2.5-Coder-32B-Instruct":          "Code Generation",
-    "Qwen/Qwen2.5-Coder-14B-Instruct":          "Code Generation",
-    "deepseek-ai/deepseek-coder-33b-instruct":  "Code Generation",
-    "google/codegemma-7b-it":                   "Code Generation",
-    "mistralai/Mistral-7B-Instruct-v0.3":       "General Instruction",
-    "microsoft/Phi-3-mini-128k-instruct":       "General Instruction",
-    "microsoft/Phi-3.5-mini-instruct":          "General Instruction",
-    "microsoft/phi-4":                          "General Instruction",
-    "microsoft/phi-2":                          "General Instruction",
-    "meta-llama/Llama-3.1-8B-Instruct":         "General Instruction",
-    "meta-llama/Llama-3.1-70B-Instruct":        "General Instruction",
-    "meta-llama/Llama-3.2-1B-Instruct":         "General Instruction",
-    "meta-llama/Llama-3.2-3B-Instruct":         "General Instruction",
-    "WizardLMTeam/WizardLM-70B-V1.0":           "General Instruction",
-    "deepseek-ai/DeepSeek-R1-Distill-Llama-8B": "Reasoning Distilled",
-    "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B": "Reasoning Distilled",
-    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B":"Reasoning Distilled",
-    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B":"Reasoning Distilled",
-    "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B": "Reasoning Distilled",
-    "gpt-4o":                                   "General Instruction",
-    "gpt-4o-mini":                              "General Instruction",
-    "gpt-4.1":                                  "General Instruction",
-    "gpt-4.1-mini":                             "General Instruction",
-    "gpt-4.1-nano":                             "General Instruction",
-    "Qwen/QwQ-32B":                             "Reasoning",
-    "Qwen/Qwen2.5-72B-Instruct":                "Reasoning",
-    "Qwen/Qwen2.5-7B-Instruct":                 "Reasoning",
-    "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B":    "Reasoning",
-    "openai/gpt-oss-20b":                       "General Instruction"
-}
+_DEFAULT_MODEL_CONFIG = Path(__file__).resolve().parents[2] / "configs" / "models.yaml"
+
+
+def _load_models_yaml(config_path: str | Path | None = None) -> List[dict]:
+    cfg_path = Path(config_path) if config_path else _DEFAULT_MODEL_CONFIG
+    if not cfg_path.exists():
+        raise FileNotFoundError(f"Model config file not found: {cfg_path}")
+
+    with cfg_path.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+
+    models = data.get("models", [])
+    if not isinstance(models, list):
+        raise ValueError(f"Invalid model config format in {cfg_path}: 'models' must be a list")
+    return models
+
+
+def load_model_registry(config_path: str | Path | None = None) -> Dict[str, dict]:
+    registry: Dict[str, dict] = {}
+    for item in _load_models_yaml(config_path):
+        model_id = item.get("id")
+        if not model_id:
+            continue
+        registry[model_id] = item
+    return registry
+
+
+def load_active_models(config_path: str | Path | None = None) -> List[str]:
+    models = _load_models_yaml(config_path)
+    return [m["id"] for m in models if m.get("id") and m.get("active", False)]
+
+
+def load_model_sizes(config_path: str | Path | None = None) -> Dict[str, str]:
+    registry = load_model_registry(config_path)
+    return {mid: str(meta.get("size", "unknown")) for mid, meta in registry.items()}
+
+
+def load_model_categories(config_path: str | Path | None = None) -> Dict[str, str]:
+    registry = load_model_registry(config_path)
+    return {mid: str(meta.get("category", "unknown")) for mid, meta in registry.items()}
+
+
+# Backward-compatible module-level maps
+model_sizes = load_model_sizes()
+model_categories = load_model_categories()

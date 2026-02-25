@@ -1,0 +1,259 @@
+models:
+  - id: meta-llama/Llama-3.2-1B-Instruct
+    size: 1B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2024-09
+
+  - id: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+    size: 1.5B
+    category: reasoning_distilled
+    active: false
+    provider: hf
+    release_date: 2025-01
+
+  - id: microsoft/phi-2
+    size: 2.78B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2023-12
+
+  - id: meta-llama/Llama-3.2-3B-Instruct
+    size: 3B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2024-09
+
+  - id: microsoft/Phi-3-mini-128k-instruct
+    size: 3.8B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2024-04
+
+  - id: microsoft/Phi-3.5-mini-instruct
+    size: 3.8B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2024-08
+
+  - id: Qwen/Qwen3-4B
+    size: 4B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2025-04
+
+  - id: mistralai/Mistral-7B-Instruct-v0.3
+    size: 7.24B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2024-05
+
+  - id: Qwen/Qwen2.5-7B-Instruct
+    size: 7.62B
+    category: reasoning_native
+    active: false
+    provider: hf
+    release_date: 2024-09
+
+  - id: Qwen/Qwen3-8B
+    size: 8B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2025-04
+
+  - id: gpt-4o-mini
+    size: 8B
+    category: general_instruction
+    active: false
+    provider: openai
+    release_date: 2024-07
+
+  - id: deepseek-ai/DeepSeek-R1-Distill-Llama-8B
+    size: 8.03B
+    category: reasoning_distilled
+    active: false
+    provider: hf
+    release_date: 2025-01
+
+  - id: meta-llama/Llama-3.1-8B-Instruct
+    size: 8.03B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2024-07
+
+  - id: deepseek-ai/DeepSeek-R1-0528-Qwen3-8B
+    size: 8.19B
+    category: reasoning_native
+    active: false
+    provider: hf
+    release_date: 2025-05
+
+  - id: google/codegemma-7b-it
+    size: 8.5B
+    category: code_generation
+    active: false
+    provider: hf
+    release_date: 2024-03
+
+  - id: 01-ai/Yi-Coder-9B-Chat
+    size: 8.8B
+    category: code_generation
+    active: false
+    provider: hf
+    release_date: 2024-08
+
+  - id: microsoft/phi-4
+    size: 14.7B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2024-12
+
+  - id: Qwen/Qwen2.5-Coder-14B-Instruct
+    size: 14.8B
+    category: code_generation
+    active: false
+    provider: hf
+    release_date: 2024-11
+
+  - id: deepseek-ai/DeepSeek-R1-Distill-Qwen-14B
+    size: 14.8B
+    category: reasoning_distilled
+    active: true
+    provider: hf
+    release_date: 2025-01
+
+  - id: bigcode/starcoder2-15b-instruct-v0.1
+    size: 15B
+    category: code_generation
+    active: false
+    provider: hf
+    release_date: 2024-04
+
+  - id: openai/gpt-oss-20b
+    size: 20B
+    category: general_instruction
+    active: false
+    provider: openai
+    release_date: 2025-08
+
+  - id: mistralai/Codestral-22B-v0.1
+    size: 22.2B
+    category: code_generation
+    active: false
+    provider: hf
+    release_date: 2024-05
+
+  - id: Qwen/QwQ-32B
+    size: 32.8B
+    category: reasoning_native
+    active: false
+    provider: hf
+    release_date: 2025-03
+
+  - id: Qwen/Qwen2.5-Coder-32B-Instruct
+    size: 32.8B
+    category: code_generation
+    active: false
+    provider: hf
+    release_date: 2024-11
+
+  - id: Qwen/Qwen3-32B
+    size: 32.8B
+    category: general_instruction
+    active: true
+    provider: hf
+    release_date: 2025-04
+
+  - id: deepseek-ai/DeepSeek-R1-Distill-Qwen-32B
+    size: 32.8B
+    category: reasoning_distilled
+    active: false
+    provider: hf
+    release_date: 2025-01
+
+  - id: deepseek-ai/deepseek-coder-33b-instruct
+    size: 33.3B
+    category: code_generation
+    active: false
+    provider: hf
+    release_date: 2023-11
+
+  - id: codellama/CodeLlama-34b-Instruct-hf
+    size: 34B
+    category: code_generation
+    active: false
+    provider: hf
+    release_date: 2023-08
+
+  - id: WizardLMTeam/WizardLM-70B-V1.0
+    size: 70B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2023-08
+
+  - id: codellama/CodeLlama-70b-Python-hf
+    size: 70B
+    category: code_generation
+    active: false
+    provider: hf
+    release_date: 2024-01
+
+  - id: meta-llama/Llama-3.1-70B-Instruct
+    size: 70B
+    category: general_instruction
+    active: false
+    provider: hf
+    release_date: 2024-07
+
+  - id: deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    size: 70.6B
+    category: reasoning_distilled
+    active: false
+    provider: hf
+    release_date: 2025-01
+
+  - id: Qwen/Qwen2.5-72B-Instruct
+    size: 72B
+    category: reasoning_native
+    active: false
+    provider: hf
+    release_date: 2024-09
+
+  - id: gpt-4.1
+    size: unknown
+    category: general_instruction
+    active: false
+    provider: openai
+    release_date: 2025-04
+
+  - id: gpt-4.1-mini
+    size: unknown
+    category: general_instruction
+    active: false
+    provider: openai
+    release_date: 2025-04
+
+  - id: gpt-4.1-nano
+    size: unknown
+    category: general_instruction
+    active: false
+    provider: openai
+    release_date: 2025-04
+
+  - id: gpt-4o
+    size: unknown
+    category: general_instruction
+    active: false
+    provider: openai
+    release_date: 2024-05

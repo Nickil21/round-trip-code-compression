@@ -60,6 +60,12 @@ def main():
                         help="Variant name, e.g. base64, hex, csv, compact.")
     parser.add_argument("--output_csv", default=None,
                         help="Optional path to write the comparison table as CSV.")
+    parser.add_argument(
+        "--task_family",
+        default="output",
+        choices=["output", "input", "both"],
+        help="Which io_pred family to compare: output, input, or both.",
+    )
     args = parser.parse_args()
 
     # ── Load CSVs ────────────────────────────────────────────────────────────
@@ -76,13 +82,24 @@ def main():
     for df in (orig_df, abla_df):
         df["status"] = df["status"].astype(str).str.strip().str.lower()
 
-    # ── Filter to output tasks for the ablation (only tasks with output_alt) ─
-    ablation_tasks = {
+    # ── Filter tasks by family ────────────────────────────────────────────────
+    output_tasks = {
         "output_execution_prediction",
         "output_execution_prediction_with_inversion",
     }
-    orig_df_out  = orig_df[orig_df["io_pred"].isin(ablation_tasks)].copy()
-    abla_df_out  = abla_df[abla_df["io_pred"].isin(ablation_tasks)].copy()
+    input_tasks = {
+        "input_execution_prediction",
+        "input_execution_prediction_with_inversion",
+    }
+    if args.task_family == "output":
+        selected_tasks = output_tasks
+    elif args.task_family == "input":
+        selected_tasks = input_tasks
+    else:
+        selected_tasks = output_tasks | input_tasks
+
+    orig_df_out  = orig_df[orig_df["io_pred"].isin(selected_tasks)].copy()
+    abla_df_out  = abla_df[abla_df["io_pred"].isin(selected_tasks)].copy()
 
     # ── Accuracy tables ───────────────────────────────────────────────────────
     orig_acc  = _acc_by_io_pred(orig_df_out)

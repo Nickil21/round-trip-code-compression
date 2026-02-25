@@ -263,7 +263,7 @@ def _process_vllm_batch(data, output_file_path):
             chunk = data[chunk_start : chunk_start + VLLM_CHUNK_SIZE]
             prompts = [
                 tokenizer.apply_chat_template(
-                    js['messages'], tokenize=False, add_generation_prompt=True
+                    js['messages'], tokenize=False, add_generation_prompt=True, enable_thinking=False
                 )
                 for js in chunk
             ]

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=reflect
-#SBATCH --output=logs/slurm/reflect.%A_%a.out
-#SBATCH --error=logs/slurm/reflect.%A_%a.err
+#SBATCH --job-name=codeio-self-reflect
+#SBATCH --output=logs/slurm/codeio-self-reflect.%A_%a.out
+#SBATCH --error=logs/slurm/codeio-self-reflect.%A_%a.err
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=32
 #SBATCH --time=1-00:00:00

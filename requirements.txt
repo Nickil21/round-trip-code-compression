@@ -17,3 +17,4 @@ python-dotenv
 huggingface_hub
 tabulate
 matplotlib
+PyYAML

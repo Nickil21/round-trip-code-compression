@@ -25,7 +25,7 @@ from tqdm import tqdm
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from core.utils import load_jsonl_yield, build_messages, get_freq_dict
-from data.build_codeio_msg import build_io_pred
+from data.build_codeio_msg import build_io_pred, _sanitize
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -432,6 +432,14 @@ IO_REQS = {
 
 _INPUT_RETURN_TYPE_HINT = 'str (e.g. "hello world")'
 
+_INPUT_TOKENIZATION_DESCRIPTIONS = {
+    "raw": "raw string",
+    "base64": "Base64-encoded UTF-8 string",
+    "hex": "hex-encoded UTF-8 bytes",
+    "codepoints": "space-separated Unicode code points",
+    "unicode_escape": "Python unicode-escaped string",
+}
+
 # IO requirements for the *decoding* direction — used by the input inversion task,
 # where the model is shown the alt-format encoder and must predict the original string.
 IO_REQS_DECODING = {
@@ -530,6 +538,77 @@ def get_refcode(algorithm: str, variant: str, input_xx: str, freq: dict = None) 
     raise ValueError(f"Unsupported algorithm/variant: {algorithm}/{variant}")
 
 
+def _encode_input_for_prompt(input_xx: str, input_tokenization: str) -> str:
+    """Convert raw input string into the requested tokenization variant for prompt display."""
+    if input_tokenization == "raw":
+        return input_xx
+    if input_tokenization == "base64":
+        return base64.b64encode(input_xx.encode("utf-8")).decode("ascii")
+    if input_tokenization == "hex":
+        return input_xx.encode("utf-8").hex()
+    if input_tokenization == "codepoints":
+        return " ".join(str(ord(ch)) for ch in input_xx)
+    if input_tokenization == "unicode_escape":
+        return input_xx.encode("unicode_escape").decode("ascii")
+    raise ValueError(f"Unsupported input_tokenization: {input_tokenization}")
+
+
+def _wrap_refcode_for_input_tokenization(refcode: str, input_tokenization: str) -> str:
+    """
+    Wrap refcode so main_solution accepts a tokenized input representation and
+    decodes it before executing the original compression logic.
+    """
+    if input_tokenization == "raw":
+        return refcode
+
+    marker = "def main_solution(uncompressed):"
+    if marker not in refcode:
+        raise ValueError("Unexpected refcode format: cannot find main_solution(uncompressed)")
+
+    inner_refcode = refcode.replace(marker, "def _main_solution_raw(uncompressed):", 1)
+
+    if input_tokenization == "base64":
+        decode_lines = [
+            "    import base64",
+            "    _raw = base64.b64decode(uncompressed).decode('utf-8')",
+        ]
+    elif input_tokenization == "hex":
+        decode_lines = [
+            "    _raw = bytes.fromhex(uncompressed).decode('utf-8')",
+        ]
+    elif input_tokenization == "codepoints":
+        decode_lines = [
+            "    _raw = '' if not uncompressed.strip() else ''.join(chr(int(tok)) for tok in uncompressed.split())",
+        ]
+    elif input_tokenization == "unicode_escape":
+        decode_lines = [
+            "    _raw = bytes(uncompressed, 'utf-8').decode('unicode_escape')",
+        ]
+    else:
+        raise ValueError(f"Unsupported input_tokenization: {input_tokenization}")
+
+    wrapper_lines = [
+        "",
+        "def main_solution(uncompressed):",
+        *decode_lines,
+        "    return _main_solution_raw(_raw)",
+    ]
+    return inner_refcode + "\n".join(wrapper_lines)
+
+
+def _augment_io_req_for_input_tokenization(io_req: str, input_tokenization: str) -> str:
+    """Add a short note to IO requirements for tokenized input variants."""
+    if input_tokenization == "raw":
+        return io_req
+    desc = _INPUT_TOKENIZATION_DESCRIPTIONS[input_tokenization]
+    note = (
+        "Input format note:\n"
+        f"  The provided `uncompressed` value is a {desc}. "
+        "Decode it to the original string before applying the algorithm.\n\n"
+    )
+    return note + io_req
+
+
 def compute_output_alt(algorithm: str, variant: str, input_xx: str, original_output, freq: dict = None) -> str:
     """
     Compute the ground-truth alternative output for a sample.
@@ -623,6 +702,12 @@ def main():
     parser.add_argument("--input_file",  required=True,  help="Path to data.jsonl")
     parser.add_argument("--output_file", required=True,  help="Path to write msg.jsonl")
     parser.add_argument(
+        "--input_tokenization",
+        default="raw",
+        choices=["raw", "base64", "hex", "codepoints", "unicode_escape"],
+        help="How to represent the input string in output-prediction prompts.",
+    )
+    parser.add_argument(
         "--prompt_type", default="zero_shot", choices=["zero_shot"],
         help="Prompt style (only zero_shot supported)."
     )
@@ -635,7 +720,7 @@ def main():
             f"Valid combinations: {sorted(VALID_COMBOS)}"
         )
 
-    io_req          = IO_REQS[combo]
+    io_req          = _augment_io_req_for_input_tokenization(IO_REQS[combo], args.input_tokenization)
     io_req_decoding = IO_REQS_DECODING[combo]
 
     # ── Resume support ──────────────────────────────────────────────────────
@@ -661,7 +746,9 @@ def main():
 
     try:
         for iid, item in enumerate(tqdm(dt, desc=f"{args.algorithm}/{args.variant}")):
-            problem_description = item["problem_description"]
+            # Apply the same Level-1 sanitization as the standard pipeline so that
+            # "HUFFMAN compression" → "a custom algorithm" in the stored metadata.
+            problem_description = _sanitize(item["problem_description"])
             algorithm = item.get("algorithm", args.algorithm)
 
             for ioid, io in enumerate(item["ios"]):
@@ -694,7 +781,7 @@ def main():
                 )
 
                 for n_task, task in enumerate(OUTPUT_TASKS + INPUT_TASKS):
-                    sample_id = f"{iid}_{ioid}_{n_task}"
+                    sample_id = f"{iid}_{ioid}_{n_task}_{args.input_tokenization}"
                     if sample_id in done_ids:
                         continue
 
@@ -705,17 +792,25 @@ def main():
                         task_io_dir      = "i"
                         task_outputx     = output_alt   # shown as "Given the following output: Z"
                         task_return_hint = _INPUT_RETURN_TYPE_HINT
+                        task_refcode     = refcode
+                        task_inputx      = input_xx
                     else:
                         task_io_req      = io_req
                         task_io_dir      = "o"
                         task_outputx     = output_alt
                         task_return_hint = return_type_hint
+                        task_refcode     = _wrap_refcode_for_input_tokenization(
+                            refcode, args.input_tokenization
+                        )
+                        task_inputx      = _encode_input_for_prompt(
+                            input_xx, args.input_tokenization
+                        )
 
                     prompt = build_io_pred(
                         problem_description,
                         task_io_req,
-                        refcode,
-                        input_xx,
+                        task_refcode,
+                        task_inputx,
                         task_outputx,
                         prompt_type=args.prompt_type,
                         io=task_io_dir,
@@ -741,8 +836,10 @@ def main():
                         "category":            category,
                         "algorithm":           algorithm,
                         "variant":             args.variant,
+                        "input_tokenization":  args.input_tokenization,
                         "refcode":             refcode,
                         "input":               input_xx,
+                        "input_prompt":        task_inputx,
                         "output":              output_xx,
                         "output_alt":          output_alt,
                         "id":                  sample_id,

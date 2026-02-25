@@ -2,12 +2,14 @@
 # Tokenization ablation pipeline — QwQ-32B (vLLM via singularity)
 #
 # Each array task runs one algo:variant pair with the same singularity +
-# TP/max-length retry logic used in model-inference.sh.
+# TP/max-length retry logic used in zero-shot-inference.sh.
 #
 # Usage:
 #   bash scripts/tokenization-ablation.sh [model] [temperature]   # interactive (all variants sequentially)
 #   sbatch scripts/tokenization-ablation.sh                        # SLURM — auto-sizes array to VARIANTS
 #   sbatch scripts/tokenization-ablation.sh Qwen/QwQ-32B 0.2
+#   TASK_FAMILY=both|output|input bash scripts/tokenization-ablation.sh ...
+#   INPUT_TOKENIZATIONS=raw,base64,hex,codepoints,unicode_escape bash scripts/tokenization-ablation.sh ...
 #
 # The --array size is computed at runtime from the VARIANTS list and passed via
 # self-resubmission, so adding/removing variants requires no manual header edits.
@@ -28,6 +30,8 @@ MODEL="${1:-Qwen/QwQ-32B}"
 T="${2:-0.2}"
 NUM_COMPLETIONS=5
 MAX_CONCURRENT=3   # max array tasks running at once (each uses 4 GPUs)
+TASK_FAMILY="${TASK_FAMILY:-both}"   # output | input | both
+INPUT_TOKENIZATIONS_CSV="${INPUT_TOKENIZATIONS:-raw}"
 
 VARIANTS=(
   "huffman:base64"
@@ -77,6 +81,10 @@ nvidia-smi --list-gpus || true
 
 echo "Working directory: $(pwd)"
 echo "Model: ${MODEL}  Temperature: ${T}  N completions: ${NUM_COMPLETIONS}"
+echo "Comparison task family: ${TASK_FAMILY}"
+echo "Input tokenizations: ${INPUT_TOKENIZATIONS_CSV}"
+
+IFS=',' read -r -a INPUT_TOKENIZATIONS <<< "${INPUT_TOKENIZATIONS_CSV}"
 
 # ── Select variant(s) ─────────────────────────────────────────────────────────
 if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then
@@ -164,11 +172,12 @@ run_inference() {
 # ── Per-variant pipeline ──────────────────────────────────────────────────────
 run_variant() {
   local ALG_VARIANT="$1"
+  local INPUT_TOK="$2"
   local ALG="${ALG_VARIANT%%:*}"
   local VARIANT="${ALG_VARIANT##*:}"
 
   echo "═══════════════════════════════════════════════════════════════════"
-  echo "  Processing: ${ALG}/${VARIANT}"
+  echo "  Processing: ${ALG}/${VARIANT} | input_tokenization=${INPUT_TOK}"
   echo "═══════════════════════════════════════════════════════════════════"
 
   local DATA_DIR="data/processed/${ALG}"
@@ -183,17 +192,22 @@ run_variant() {
   MODEL_TAG=$(echo "${MODEL##*/}" | tr '[:upper:]' '[:lower:]' | tr ' -' '__')
 
   # Step 1: Build alternative prompts
-  local MSG_FILE="${DATA_DIR}/codeio_alt_${VARIANT}_msg.jsonl"
+  local INPUT_TOK_SUFFIX=""
+  if [[ "${INPUT_TOK}" != "raw" ]]; then
+    INPUT_TOK_SUFFIX="_in_${INPUT_TOK}"
+  fi
+  local MSG_FILE="${DATA_DIR}/codeio_alt_${VARIANT}${INPUT_TOK_SUFFIX}_msg.jsonl"
   echo "Step 1: Building alternative prompts → ${MSG_FILE}"
   python src/ablation/build_tokenization_ablation.py \
     --algorithm   "${ALG}" \
     --variant     "${VARIANT}" \
+    --input_tokenization "${INPUT_TOK}" \
     --input_file  "${INPUT_JSON}" \
     --output_file "${MSG_FILE}" \
     --prompt_type zero_shot
 
   # Step 2: Inference
-  local OUT_FILE="${DATA_DIR}/codeio_alt_${VARIANT}_gens_model_${MODEL_TAG}_temp_${T}_n${NUM_COMPLETIONS}.jsonl"
+  local OUT_FILE="${DATA_DIR}/codeio_alt_${VARIANT}${INPUT_TOK_SUFFIX}_gens_model_${MODEL_TAG}_temp_${T}_n${NUM_COMPLETIONS}.jsonl"
   local VERIF_JSONL="${OUT_FILE%.jsonl}_verified.jsonl"
   local VERIF_CSV="${OUT_FILE%.jsonl}_verified.csv"
   local LOG_DIR="logs/ablation/${ALG}/${VARIANT}"
@@ -231,7 +245,8 @@ run_variant() {
       --original_csv "${ORIG_CSV}" \
       --ablation_csv "${VERIF_CSV}" \
       --algo         "${ALG}" \
-      --variant      "${VARIANT}"
+      --variant      "${VARIANT}" \
+      --task_family  "${TASK_FAMILY}"
   else
     echo "Step 4: Skipping comparison (original CSV not found: ${ORIG_CSV})"
   fi
@@ -240,7 +255,9 @@ run_variant() {
 }
 
 for PAIR in "${RUN_VARIANTS[@]}"; do
-  run_variant "${PAIR}"
+  for INPUT_TOK in "${INPUT_TOKENIZATIONS[@]}"; do
+    run_variant "${PAIR}" "${INPUT_TOK}"
+  done
 done
 
 echo "Done: ${RUN_VARIANTS[*]}"
