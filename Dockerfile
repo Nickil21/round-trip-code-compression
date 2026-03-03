@@ -28,7 +28,7 @@ RUN bash -lc '\
 # vllm is already provided by the base image and is intentionally commented out
 # in requirements.txt, so this installs only the remaining packages.
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --ignore-installed blinker -r requirements.txt
 
 # Copy project source.
 COPY . .
