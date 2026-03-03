@@ -1,0 +1,17 @@
+LLaMA-Factory/
+data/
+logs/
+temp/
+datasets/
+processed_datasets-old/
+webapp/
+demo/
+k8s/
+*.log
+*.local_backup
+run.sh
+setup.sh
+.env
+.git/
+**/__pycache__/
+**/*.pyc
