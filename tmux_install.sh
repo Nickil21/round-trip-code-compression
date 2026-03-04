@@ -191,6 +191,10 @@ EOF
 }
 
 install_tmux_with_curl() {
+  if need_cmd tmux; then
+    echo "tmux already installed: $(tmux -V)"
+    return 0
+  fi
   local tmpdir tarball url
   install_tmux_build_deps_if_possible || true
 
