@@ -15,6 +15,7 @@ logs/
 # Temp / scratch
 temp/
 *.tmp
+*.local_backup
 
 # Environment markers
 .env_installed

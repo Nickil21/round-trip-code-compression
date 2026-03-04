@@ -34,7 +34,7 @@ echo "Installing vllm..."
 pip install vllm
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ALIASES_LINE="source ${SCRIPT_DIR}/tmux_aliases.sh"
+ALIASES_LINE="source ${SCRIPT_DIR}/docker/tmux_aliases.sh"
 if ! grep -qF "${ALIASES_LINE}" "$HOME/.bashrc" 2>/dev/null; then
   echo "${ALIASES_LINE}" >> "$HOME/.bashrc"
 fi

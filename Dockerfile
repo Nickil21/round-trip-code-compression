@@ -17,11 +17,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends tmux && rm -rf 
 
 # Install Node, Claude Code, and Codex CLIs.
 # Done before COPY . . so this layer is cached independently of source changes.
-COPY tmux_install.sh .
+COPY docker/tmux_install.sh .
 RUN bash tmux_install.sh
 
 # Install short tmux aliases (tn/ta/tl/tk/ts/tw/trn).
-COPY tmux_aliases.sh .
+COPY docker/tmux_aliases.sh .
 RUN echo 'source /workspace/tmux_aliases.sh' >> ~/.bashrc
 
 # tmux_install.sh writes PATH updates to ~/.bashrc (login-shell only).
