@@ -41,5 +41,5 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/nickil21/round-trip-code-compression:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/nickil21/round-trip-code-compression:cache
+          cache-to: type=registry,ref=ghcr.io/nickil21/round-trip-code-compression:cache,mode=max
