@@ -8,10 +8,18 @@ FROM vllm/vllm-openai:v0.9.2
 
 WORKDIR /workspace
 
+ENV HF_HOME=/mnt_path/huggingface \
+    PYTHONUNBUFFERED=1 \
+    TOKENIZERS_PARALLELISM=false
+
 # Install tmux, Node, Claude Code, and Codex CLIs.
 # Done before COPY . . so this layer is cached independently of source changes.
 COPY tmux_install.sh .
 RUN bash tmux_install.sh
+
+# Install short tmux aliases (tn/ta/tl/tk/ts/tw/trn).
+COPY tmux_aliases.sh .
+RUN echo 'source /workspace/tmux_aliases.sh' >> ~/.bashrc
 
 # tmux_install.sh writes PATH updates to ~/.bashrc (login-shell only).
 # Symlink claude and codex into /usr/local/bin so they are reachable in
@@ -30,5 +38,6 @@ RUN bash -lc '\
 COPY requirements.txt .
 RUN pip install --no-cache-dir --ignore-installed blinker -r requirements.txt
 
-# Copy project source.
+# Copy project source and make scripts executable.
 COPY . .
+RUN chmod +x scripts/*.sh
